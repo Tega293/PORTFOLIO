@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.endsWith('/projects.json')) {
+  if (url.pathname.endsWith('/projects.json') || url.pathname.endsWith('/skills.json')) {
     event.respondWith(fetch(request).then((response) => {
       if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
       return response;

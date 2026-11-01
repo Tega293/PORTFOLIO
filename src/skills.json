@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ai-machine-learning",
+    "area": "Intelligence",
+    "title": "AI & machine learning",
+    "copy": "Explore how machine learning can turn data and complex workflows into useful, responsible product experiences."
+  },
+  {
+    "id": "web-development",
+    "area": "Front end",
+    "title": "Web development",
+    "copy": "Build responsive, accessible interfaces with clear structure, purposeful interaction and careful visual detail."
+  },
+  {
+    "id": "application-development",
+    "area": "Back end",
+    "title": "Application development",
+    "copy": "Shape the application logic, data flows and integrations that make digital products work reliably."
+  },
+  {
+    "id": "product-design",
+    "area": "Product",
+    "title": "Product design",
+    "copy": "Connect user needs, product direction and interface design into experiences that feel coherent from start to finish."
+  },
+  {
+    "id": "penetration-testing",
+    "area": "Security",
+    "title": "Penetration testing",
+    "copy": "Apply a security-minded perspective informed by professional penetration-testing certification."
+  }
+]

@@ -1,6 +1,6 @@
 const {
-  decodeImageAsset, getCatalog, getGitConfig, githubRequest, hasSession, isConfigured,
-  configurationError, requestOriginAllowed, sendJson, validateProjects,
+  decodeImageAsset, getCatalog, getSkillsCatalog, getGitConfig, githubRequest, hasSession, isConfigured,
+  configurationError, requestOriginAllowed, sendJson, validateProjects, validateSkills,
 } = require('../../lib/cms');
 
 function parseBody(body) {
@@ -21,11 +21,16 @@ module.exports = async function publishHandler(req, res) {
   try {
     const body = parseBody(req.body);
     const projects = validateProjects(body.projects);
-    const currentCatalog = await getCatalog();
+    const skills = validateSkills(body.skills);
+    const [currentCatalog, currentSkills] = await Promise.all([getCatalog(), getSkillsCatalog()]);
     if ((body.baseSha || null) !== currentCatalog.sha) return sendJson(res, 409, { error: 'The catalog changed since it was loaded.' });
+    if ((body.skillsSha || null) !== currentSkills.skillsSha) return sendJson(res, 409, { error: 'The skills catalog changed since it was loaded.' });
     const assets = Array.isArray(body.assets) ? body.assets : [];
     if (assets.length > 10) return sendJson(res, 400, { error: 'Upload at most 10 images per publish.' });
-    const files = [{ path: 'public/projects.json', content: Buffer.from(`${JSON.stringify(projects, null, 2)}\n`, 'utf8').toString('base64') }];
+    const files = [
+      { path: 'public/projects.json', content: Buffer.from(`${JSON.stringify(projects, null, 2)}\n`, 'utf8').toString('base64') },
+      { path: 'public/skills.json', content: Buffer.from(`${JSON.stringify(skills, null, 2)}\n`, 'utf8').toString('base64') },
+    ];
     const seenPaths = new Set();
     let uploadedBytes = 0;
     assets.forEach((asset) => {
@@ -71,7 +76,8 @@ module.exports = async function publishHandler(req, res) {
     }
 
     const catalogBlob = blobRecords.find((record) => record.path === 'public/projects.json');
-    return sendJson(res, 200, { sha: catalogBlob.sha, commitSha: commit.sha, branch, projectCount: projects.length });
+    const skillsBlob = blobRecords.find((record) => record.path === 'public/skills.json');
+    return sendJson(res, 200, { sha: catalogBlob.sha, skillsSha: skillsBlob.sha, commitSha: commit.sha, branch, projectCount: projects.length, skillCount: skills.length });
   } catch (error) {
     const status = error.status === 404 || error.status === 401 || error.status === 403 ? 502 : (error.status || 400);
     return sendJson(res, status, { error: `Publish failed. ${error.message}` });

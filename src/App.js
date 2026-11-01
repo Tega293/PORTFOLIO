@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import defaultProjects from './projects.json';
+import defaultSkills from './skills.json';
 import './App.css';
 
 const processSteps = [
@@ -22,34 +23,6 @@ const processSteps = [
     number: '04',
     title: 'Build & learn',
     copy: 'Bring the work to life, check it across screens and leave a solid foundation to grow.',
-  },
-];
-
-const capabilities = [
-  {
-    number: '01 / Intelligence',
-    title: 'AI & machine learning',
-    copy: 'Explore how machine learning can turn data and complex workflows into useful, responsible product experiences.',
-  },
-  {
-    number: '02 / Front end',
-    title: 'Web development',
-    copy: 'Build responsive, accessible interfaces with clear structure, purposeful interaction and careful visual detail.',
-  },
-  {
-    number: '03 / Back end',
-    title: 'Application development',
-    copy: 'Shape the application logic, data flows and integrations that make digital products work reliably.',
-  },
-  {
-    number: '04 / Product',
-    title: 'Product design',
-    copy: 'Connect user needs, product direction and interface design into experiences that feel coherent from start to finish.',
-  },
-  {
-    number: '05 / Security',
-    title: 'Penetration testing',
-    copy: 'Apply a security-minded perspective informed by professional penetration-testing certification.',
   },
 ];
 
@@ -662,6 +635,7 @@ function PortfolioApp() {
   const [statCounts, setStatCounts] = useState({ projects: 0, tools: 0 });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [projects, setProjects] = useState(defaultProjects);
+  const [capabilities, setCapabilities] = useState(defaultSkills);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -740,6 +714,15 @@ function PortfolioApp() {
     window.addEventListener('scroll', updateProgress, { passive: true });
     window.addEventListener('resize', updateProgress);
     return () => { window.cancelAnimationFrame(frame); window.removeEventListener('scroll', updateProgress); window.removeEventListener('resize', updateProgress); };
+  }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+    fetch('/skills.json', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((items) => { if (isCurrent && Array.isArray(items) && items.every((item) => item?.id && item?.title)) setCapabilities(items); })
+      .catch(() => {});
+    return () => { isCurrent = false; };
   }, []);
 
   useEffect(() => {
@@ -1047,9 +1030,9 @@ function PortfolioApp() {
               <p>Bring me in for a focused design challenge or for the full journey from early direction to a polished, build-ready experience.</p>
             </div>
             <div className="capability-grid">
-              {capabilities.map((capability) => (
-                <article className="capability-card" key={capability.number}>
-                  <span>{capability.number}</span>
+              {capabilities.map((capability, index) => (
+                <article className="capability-card" key={capability.id}>
+                  <span>{String(index + 1).padStart(2, '0')} / {capability.area || 'Skill'}</span>
                   <h3>{capability.title}</h3>
                   <p>{capability.copy}</p>
                 </article>
@@ -1164,6 +1147,28 @@ function slugify(value) {
   return value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64);
 }
 
+function blankSkill() {
+  return { id: 'new-skill', area: '', title: '', copy: '' };
+}
+
+function SkillEditor({ skill, index, count, isCreating, isBusy, notice, error, onChange, onSubmit, onRemove, onMove }) {
+  return (
+    <div className="cms-skill-editor">
+      <div className="cms-editor-heading"><div><span className="cms-kicker">{isCreating ? 'NEW SKILL CARD' : `SKILL ${String(index + 1).padStart(2, '0')} OF ${String(count).padStart(2, '0')}`}</span><h1 id="cms-skill-title">{isCreating ? 'Add a skill' : skill.title || 'Edit skill'}</h1><p>This content appears in the public capabilities section.</p></div><div className="cms-editor-actions">{!isCreating && <><button className="cms-quiet-button" type="button" onClick={() => onMove(-1)} disabled={isBusy || index <= 0}>Move up</button><button className="cms-quiet-button" type="button" onClick={() => onMove(1)} disabled={isBusy || index >= count - 1}>Move down</button><button className="cms-danger-button" type="button" onClick={onRemove} disabled={isBusy}>Remove skill</button></>}<button className="cms-primary-button" type="submit" form="skill-editor-form" disabled={isBusy}>{isBusy ? 'Publishing…' : 'Publish skill'}</button></div></div>
+      {notice && <div className="cms-notice" role="status">{notice}</div>}{error && <div className="cms-error cms-error-banner" role="alert">{error}</div>}
+      <article className="cms-skill-preview"><span>{String(index + 1).padStart(2, '0')} / {skill.area || 'Skill area'}</span><h2>{skill.title || 'Your skill title'}</h2><p>{skill.copy || 'A clear description of how this skill helps you build useful products.'}</p></article>
+      <form id="skill-editor-form" className="cms-form" onSubmit={onSubmit}>
+        <fieldset><legend>Skill card details</legend><div className="cms-form-grid">
+          <label className="cms-field" htmlFor="skill-title"><span>Skill title <b aria-hidden="true">*</b></span><input id="skill-title" value={skill.title} onChange={(event) => onChange('title', event.target.value)} maxLength="120" required placeholder="e.g. Machine learning" /></label>
+          <label className="cms-field" htmlFor="skill-area"><span>Skill area <b aria-hidden="true">*</b></span><input id="skill-area" value={skill.area} onChange={(event) => onChange('area', event.target.value)} maxLength="80" required placeholder="e.g. Intelligence" /></label>
+          <label className="cms-field cms-field-wide" htmlFor="skill-id"><span>Skill slug</span><input id="skill-id" value={skill.id} onChange={(event) => onChange('id', event.target.value)} maxLength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" /><small>Lowercase words separated by hyphens. Used as a stable identifier.</small></label>
+          <label className="cms-field cms-field-wide" htmlFor="skill-copy"><span>Description <b aria-hidden="true">*</b></span><textarea id="skill-copy" value={skill.copy} onChange={(event) => onChange('copy', event.target.value)} maxLength="1200" rows="5" required placeholder="Describe what you do and the value this skill brings." /><small>{skill.copy.length}/1200 characters. Keep it specific and accurate.</small></label>
+        </div></fieldset>
+      </form>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const [authState, setAuthState] = useState('checking');
   const [showPassword, setShowPassword] = useState(false);
@@ -1173,6 +1178,12 @@ function AdminDashboard() {
   });
   const [password, setPassword] = useState('');
   const [projects, setProjects] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [skillsSha, setSkillsSha] = useState(null);
+  const [activeCollection, setActiveCollection] = useState('projects');
+  const [selectedSkillId, setSelectedSkillId] = useState('');
+  const [skillForm, setSkillForm] = useState(blankSkill);
+  const [isCreatingSkill, setIsCreatingSkill] = useState(false);
   const [form, setForm] = useState(blankProject);
   const [selectedId, setSelectedId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -1205,6 +1216,8 @@ function AdminDashboard() {
     const data = await requestJson('/api/cms/projects');
     setProjects(data.projects);
     setBaseSha(data.sha);
+    setSkills(data.skills || defaultSkills);
+    setSkillsSha(data.skillsSha || null);
     let draft = null;
     try { draft = JSON.parse(window.sessionStorage.getItem('tegabyte-cms-draft') || 'null'); } catch { /* Ignore an unreadable session draft. */ }
     if (draft && (draft.isCreating || data.projects.some((project) => project.id === draft.selectedId))) {
@@ -1318,8 +1331,8 @@ function AdminDashboard() {
       if (normalized.some((project) => project.liveUrl && !/^https:\/\//i.test(project.liveUrl))) throw new Error('Project links must use HTTPS.');
       if (normalized.some((project) => project.image && !/^https:\/\//i.test(project.image) && !/^\/uploads\/[a-z0-9-]+\.(jpg|png|webp|avif)$/i.test(project.image))) throw new Error('Cover images must use HTTPS or an uploaded /uploads image.');
       const assets = Object.entries(pendingAssets).map(([path, data]) => ({ path, data }));
-      const result = await requestJson('/api/cms/publish', { method: 'POST', body: JSON.stringify({ projects: normalized, baseSha, assets }) });
-      setProjects(normalized); setBaseSha(result.sha); setPendingAssets({});
+      const result = await requestJson('/api/cms/publish', { method: 'POST', body: JSON.stringify({ projects: normalized, skills, baseSha, skillsSha, assets }) });
+      setProjects(normalized); setBaseSha(result.sha); setSkillsSha(result.skillsSha); setPendingAssets({});
       if (preserveEditor) {
         setSelectedId(selectedId); setForm(form);
       } else if (normalized.length) {
@@ -1356,6 +1369,61 @@ function AdminDashboard() {
     await publish(numbered, true);
   }
 
+  function chooseSkill(skill) {
+    setSelectedSkillId(skill.id); setSkillForm({ ...skill }); setIsCreatingSkill(false); setError(''); setNotice('');
+  }
+
+  function startNewSkill() {
+    setSelectedSkillId(''); setSkillForm(blankSkill()); setIsCreatingSkill(true); setError(''); setNotice('');
+  }
+
+  function updateSkillField(name, value) {
+    setSkillForm((current) => ({ ...current, [name]: value, ...(name === 'title' && isCreatingSkill ? { id: slugify(value) || 'new-skill' } : {}) }));
+    setNotice('');
+  }
+
+  async function publishSkills(nextSkills) {
+    setIsBusy(true); setError(''); setNotice('');
+    try {
+      const normalized = nextSkills.map((skill) => ({ id: slugify(skill.id || skill.title), area: String(skill.area || '').trim(), title: String(skill.title || '').trim(), copy: String(skill.copy || '').trim() }));
+      if (new Set(normalized.map((skill) => skill.id)).size !== normalized.length) throw new Error('Each skill needs a unique title or slug.');
+      if (normalized.some((skill) => !skill.area || !skill.title || !skill.copy)) throw new Error('Every skill needs an area, title, and description.');
+      if (normalized.length > 50) throw new Error('You can add up to 50 skills.');
+      const assets = Object.entries(pendingAssets).map(([path, data]) => ({ path, data }));
+      const result = await requestJson('/api/cms/publish', { method: 'POST', body: JSON.stringify({ projects, skills: normalized, baseSha, skillsSha, assets }) });
+      setSkills(normalized); setSkillsSha(result.skillsSha); setBaseSha(result.sha); setPendingAssets({});
+      if (normalized.length) {
+        const targetId = isCreatingSkill ? normalized[normalized.length - 1].id : skillForm.id;
+        const selected = normalized.find((skill) => skill.id === targetId) || normalized[0];
+        setSelectedSkillId(selected.id); setSkillForm({ ...selected }); setIsCreatingSkill(false);
+      } else { setSelectedSkillId(''); setSkillForm(blankSkill()); setIsCreatingSkill(true); }
+      setNotice(`Skills published in commit ${result.commitSha.slice(0, 7)}. The live site will update after its build completes.`);
+    } catch (requestError) {
+      setError(requestError.status === 409 ? 'The project or skills catalog changed on GitHub. Reload the latest catalog before publishing.' : requestError.message);
+    } finally { setIsBusy(false); }
+  }
+
+  async function saveSkill(event) {
+    event.preventDefault();
+    const next = isCreatingSkill ? [...skills, skillForm] : skills.map((skill) => skill.id === selectedSkillId ? skillForm : skill);
+    await publishSkills(next);
+  }
+
+  async function removeSkill() {
+    const selected = skills.find((skill) => skill.id === selectedSkillId);
+    if (!selected || !window.confirm(`Remove “${selected.title}” from the public skills section? This publishes the change immediately.`)) return;
+    await publishSkills(skills.filter((skill) => skill.id !== selectedSkillId));
+  }
+
+  async function moveSkill(skillId, offset) {
+    const index = skills.findIndex((skill) => skill.id === skillId);
+    const target = index + offset;
+    if (index < 0 || target < 0 || target >= skills.length) return;
+    const reordered = [...skills];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    await publishSkills(reordered);
+  }
+
   if (authState === 'checking') return <div className="cms-gate" data-theme={theme}><p>Checking CMS access…</p></div>;
   if (authState === 'unconfigured') return (
     <div className="cms-gate" data-theme={theme}><section className="cms-login-card"><span className="cms-kicker">Tegabyte · Admin</span><h1>CMS setup needed</h1><p>The admin is protected, but its server-side GitHub credentials are not configured yet. Follow the secure deployment steps in <code>CMS_SETUP.md</code>. Do not place credentials in React code or browser storage.</p><a href="/">Return to portfolio</a></section></div>
@@ -1378,11 +1446,18 @@ function AdminDashboard() {
     <div className="cms-app" data-theme={theme}>
       <header className="cms-header"><a className="cms-brand" href="/"><span>TB</span><div><strong>Tegabyte</strong><small>CONTENT STUDIO</small></div></a><div className="cms-header-actions"><span className="cms-live-indicator"><i /> GitHub publishing enabled</span><button type="button" className="cms-quiet-button" onClick={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼ Light mode' : '☾ Dark mode'}</button><button type="button" className="cms-quiet-button" onClick={logout}>Sign out</button></div></header>
       <main className="cms-layout">
-        <aside className="cms-sidebar" aria-label="Project manager"><div className="cms-sidebar-title"><div><span className="cms-kicker">PORTFOLIO CMS</span><h2>Projects <small>{projects.length}</small></h2></div><button type="button" className="cms-add-button" onClick={startNewProject} aria-label="Add a new project">＋</button></div><p className="cms-sidebar-copy">Choose a project to edit, or create a new project card.</p><div className="cms-project-list">{projects.map((project, index) => <div className={`cms-project-choice${project.id === selectedId && !isCreating ? ' is-selected' : ''}`} key={project.id}><button type="button" className="cms-project-select" onClick={() => chooseProject(project)}><span className="cms-project-order">{String(index + 1).padStart(2, '0')}</span><span><strong>{project.name}</strong><small>{project.category || 'Uncategorized'}</small></span></button><div className="cms-order-controls"><button type="button" onClick={() => moveProject(project.id, -1)} disabled={index === 0 || isBusy} aria-label={`Move ${project.name} up`}>↑</button><button type="button" onClick={() => moveProject(project.id, 1)} disabled={index === projects.length - 1 || isBusy} aria-label={`Move ${project.name} down`}>↓</button></div></div>)}</div><button type="button" className="cms-create-project" onClick={startNewProject}>＋ Add project</button><p className="cms-sidebar-foot">Updates are versioned in GitHub. Removing a project publishes that change.</p></aside>
-        <section className="cms-editor" aria-labelledby="cms-editor-title">
+        <aside className="cms-sidebar" aria-label="Content manager">
+          <div className="cms-sidebar-title"><div><span className="cms-kicker">PORTFOLIO CMS</span><h2>{activeCollection === 'projects' ? 'Projects' : 'Skills'} <small>{activeCollection === 'projects' ? projects.length : skills.length}</small></h2></div><button type="button" className="cms-add-button" onClick={activeCollection === 'projects' ? startNewProject : startNewSkill} aria-label={`Add a new ${activeCollection === 'projects' ? 'project' : 'skill'}`}>＋</button></div>
+          <div className="cms-collection-tabs" role="tablist" aria-label="Choose content type"><button type="button" role="tab" aria-selected={activeCollection === 'projects'} className={activeCollection === 'projects' ? 'is-active' : ''} onClick={() => setActiveCollection('projects')}>Projects</button><button type="button" role="tab" aria-selected={activeCollection === 'skills'} className={activeCollection === 'skills' ? 'is-active' : ''} onClick={() => { setActiveCollection('skills'); if (!selectedSkillId && !isCreatingSkill && skills.length) chooseSkill(skills[0]); }}>Skills</button></div>
+          <p className="cms-sidebar-copy">{activeCollection === 'projects' ? 'Choose a project to edit, or create a new project card.' : 'Manage the skill cards displayed in the public capabilities section.'}</p>
+          {activeCollection === 'projects' ? <><div className="cms-project-list">{projects.map((project, index) => <div className={`cms-project-choice${project.id === selectedId && !isCreating ? ' is-selected' : ''}`} key={project.id}><button type="button" className="cms-project-select" onClick={() => chooseProject(project)}><span className="cms-project-order">{String(index + 1).padStart(2, '0')}</span><span><strong>{project.name}</strong><small>{project.category || 'Uncategorized'}</small></span></button><div className="cms-order-controls"><button type="button" onClick={() => moveProject(project.id, -1)} disabled={index === 0 || isBusy} aria-label={`Move ${project.name} up`}>↑</button><button type="button" onClick={() => moveProject(project.id, 1)} disabled={index === projects.length - 1 || isBusy} aria-label={`Move ${project.name} down`}>↓</button></div></div>)}</div><button type="button" className="cms-create-project" onClick={startNewProject}>＋ Add project</button></> : <><div className="cms-project-list">{skills.map((skill, index) => <div className={`cms-project-choice${skill.id === selectedSkillId && !isCreatingSkill ? ' is-selected' : ''}`} key={skill.id}><button type="button" className="cms-project-select" onClick={() => chooseSkill(skill)}><span className="cms-project-order">{String(index + 1).padStart(2, '0')}</span><span><strong>{skill.title}</strong><small>{skill.area}</small></span></button><div className="cms-order-controls"><button type="button" onClick={() => moveSkill(skill.id, -1)} disabled={index === 0 || isBusy} aria-label={`Move ${skill.title} up`}>↑</button><button type="button" onClick={() => moveSkill(skill.id, 1)} disabled={index === skills.length - 1 || isBusy} aria-label={`Move ${skill.title} down`}>↓</button></div></div>)}</div><button type="button" className="cms-create-project" onClick={startNewSkill}>＋ Add skill</button></>}
+          <p className="cms-sidebar-foot">Published changes are versioned in GitHub and trigger the connected site deployment.</p>
+        </aside>
+        <section className="cms-editor" aria-labelledby={activeCollection === 'skills' ? 'cms-skill-title' : 'cms-editor-title'}>
+          {activeCollection === 'skills' ? <SkillEditor skill={skillForm} index={Math.max(0, skills.findIndex((skill) => skill.id === selectedSkillId))} count={skills.length} isCreating={isCreatingSkill} isBusy={isBusy} notice={notice} error={error} onChange={updateSkillField} onSubmit={saveSkill} onRemove={removeSkill} onMove={(offset) => moveSkill(selectedSkillId, offset)} /> : <>
           <div className="cms-editor-heading"><div><span className="cms-kicker">{isCreating ? 'NEW PORTFOLIO ENTRY' : `EDITING · ${String(form.number || '00').padStart(2, '0')}`}</span><h1 id="cms-editor-title">{isCreating ? 'Create a project' : form.name || 'Edit project'}</h1><p>Manage the card, preview, and full case study in one place.</p></div><div className="cms-editor-actions"><button className="cms-quiet-button" type="button" onClick={() => setShowPreview((value) => !value)}>{showPreview ? 'Hide preview' : 'Preview changes'}</button>{!isCreating && <button className="cms-danger-button" type="button" onClick={removeProject} disabled={isBusy}>Remove project</button>}<button className="cms-primary-button" form="project-editor-form" type="submit" disabled={isBusy}>{isBusy ? 'Publishing…' : 'Publish changes'}</button></div></div>
           {notice && <div className="cms-notice" role="status">{notice}</div>}{error && <div className="cms-error cms-error-banner" role="alert">{error}</div>}
-          {draftStatus && <p className="cms-draft-status" role="status">{draftStatus}</p>}
+          {draftStatus && activeCollection === 'projects' && <p className="cms-draft-status" role="status">{draftStatus}</p>}
           {showPreview && <article className="cms-preview-card"><div className="cms-preview-top"><span>LIVE CARD PREVIEW</span><span>{previewProject.category || 'Category'}</span></div>{pendingImage || form.image ? <img src={pendingImage || form.image} alt={form.imageAlt || `${form.name || 'Project'} cover preview`} /> : <div className={`cms-preview-placeholder theme-${form.theme}`}><span>{form.brand || 'PROJECT'}</span><strong>{form.headline || 'Your project headline'}</strong><p>{form.previewCopy || form.description || 'Add a short project introduction.'}</p></div>}<div className="cms-preview-copy"><h2>{form.name || 'Project title'}</h2><p>{form.description || 'Project card description appears here.'}</p><div>{(form.tagsText || '').split(',').map((tag) => tag.trim()).filter(Boolean).map((tag) => <span key={tag}>{tag}</span>)}</div><details open><summary>Case study preview</summary><MarkdownContent content={form.caseStudyContent} /></details></div></article>}
           <form id="project-editor-form" className="cms-form" onSubmit={saveProject}>
             <fieldset><legend>Project identity</legend><div className="cms-form-grid">
@@ -1415,6 +1490,7 @@ function AdminDashboard() {
               <div className="cms-field cms-field-wide cms-markdown-field"><div className="cms-markdown-head"><label htmlFor="project-case-study">Full case study content <small>Markdown supported · raw HTML is disabled</small></label><div role="tablist" aria-label="Case study editor mode"><button type="button" role="tab" aria-selected={markdownMode === 'write'} className={markdownMode === 'write' ? 'is-active' : ''} onClick={() => setMarkdownMode('write')}>Write</button><button type="button" role="tab" aria-selected={markdownMode === 'preview'} className={markdownMode === 'preview' ? 'is-active' : ''} onClick={() => setMarkdownMode('preview')}>Preview</button></div></div>{markdownMode === 'write' ? <><div className="cms-markdown-toolbar"><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}## New section\n`)}>H2 Section</button><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}**Bold text**`)}>Bold</button><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}- List item`)}>Bullet list</button></div><textarea id="project-case-study" rows="16" value={form.caseStudyContent || ''} onChange={(event) => updateField('caseStudyContent', event.target.value)} placeholder={'## Overview\nDescribe the project…\n\n## Approach\n- Add a key decision\n- Add an outcome'} /><small>Supports headings, paragraphs, bullet lists, block quotes, **bold**, *italic*, `inline code`, and HTTPS links.</small></> : <div className="cms-markdown-preview"><MarkdownContent content={form.caseStudyContent} /></div>}</div>
             </div></fieldset>
           </form>
+          </>}
         </section>
       </main>
     </div>

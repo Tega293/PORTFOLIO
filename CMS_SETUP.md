@@ -1,6 +1,6 @@
 # Project CMS setup
 
-The admin is available at `/admin`. It uses a protected Vercel Function to read and publish `public/projects.json` through GitHub. A publish creates one Git commit containing the project catalog and any uploaded cover images. If this repository is connected to Vercel with production deployments enabled for the target branch, that commit starts the live build.
+The admin is available at `/admin`. It uses protected Vercel Functions to read and publish `public/projects.json` and `public/skills.json` through GitHub. A publish creates one Git commit containing the project and skill catalogs and any uploaded cover images. If this repository is connected to Vercel with production deployments enabled for the target branch, that commit starts the live build.
 
 ## Required deployment settings
 
@@ -29,7 +29,8 @@ For local end-to-end CMS work, run the project with `npx vercel dev` after addin
 ## Publishing behavior
 
 - The admin creates, edits, reorders, and removes project cards.
-- **Publish changes** commits the whole catalog and any uploaded image files to the configured branch. The portfolio reads the deployed `/projects.json` file, so card content updates with the next successful deployment.
+- The Skills tab creates, edits, reorders, and removes the capability cards shown in the public skills section.
+- **Publish changes** commits the project catalog, skills catalog, and any uploaded image files to the configured branch. The portfolio reads the deployed `/projects.json` and `/skills.json` files, so cards and skills update with the next successful deployment.
 - Deleting a project publishes the removal immediately. Use a Vercel Preview deployment and a non-production `CMS_GITHUB_BRANCH` to test risky changes first.
 - Uploaded cover images may be JPG, PNG, WebP, or AVIF. Each image is limited to 3 MB, and new uploads are limited to 3 MB per publish. Existing images remain in the Git repository when no longer referenced so accidental deletion does not break another card.
 - Case study content is Markdown. Headings, paragraphs, lists, block quotes, bold, italics, inline code, and HTTPS links are supported. Raw HTML is never rendered.
