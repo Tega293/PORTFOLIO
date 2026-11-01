@@ -7,7 +7,11 @@
     "address": "clone-pi-amber.vercel.app",
     "theme": "recipe-central",
     "brand": "Recipe Central",
-    "nav": ["Recipes", "Drinks", "Contact"],
+    "nav": [
+      "Recipes",
+      "Drinks",
+      "Contact"
+    ],
     "action": "Find a recipe",
     "eyebrow": "GOOD FOOD, MADE MEMORABLE",
     "headline": "Find your next favourite.",
@@ -17,7 +21,11 @@
     "image": "",
     "imageAlt": "",
     "description": "Recipe Central welcomes home cooks with a food-photo carousel and quick recipe search, then invites them to explore dishes from around the world.",
-    "tags": ["Homepage experience", "Featured recipes", "Responsive React app"],
+    "tags": [
+      "Homepage experience",
+      "Featured recipes",
+      "Responsive React app"
+    ],
     "challenge": "Make a growing recipe collection feel welcoming from the first visit, while giving people a quick way to find inspiration and start browsing.",
     "response": "Lead with vibrant food photography, a clear search entry point and a curated nine-recipe preview that connects straight to the full collection.",
     "caseStudyContent": "## Overview\nRecipe Central is a recipe discovery experience designed to make a growing collection feel approachable.\n\n## Design focus\n- A welcoming home page with a food-photo carousel\n- A quick way to search and browse recipes\n- A curated home-page preview that leads into the full collection\n\n## Outcome\nA responsive recipe experience with a clear path from inspiration to the recipe collection."
@@ -30,7 +38,11 @@
     "address": "assurrex-odyw.vercel.app",
     "theme": "assurrex",
     "brand": "ASSUREX",
-    "nav": ["How it works", "Coverage", "About"],
+    "nav": [
+      "How it works",
+      "Coverage",
+      "About"
+    ],
     "action": "Start a claim",
     "eyebrow": "SMART WARRANTY CLAIM ASSESSMENT",
     "headline": "Warranty claims, made clearer.",
@@ -40,7 +52,11 @@
     "image": "",
     "imageAlt": "",
     "description": "AssureX is a competition prototype for warranty-claim intake, receipt OCR, Python-based structured-data scoring, Google Teachable Machine (GTM) claim-card scoring and human review. Its policies and model-training records are synthetic examples, not manufacturer warranties or evidence of real-world accuracy.",
-    "tags": ["Warranty claim intake", "Receipt OCR & Python scoring", "GTM scoring & human review"],
+    "tags": [
+      "Warranty claim intake",
+      "Receipt OCR & Python scoring",
+      "GTM scoring & human review"
+    ],
     "challenge": "Make a complex claim assessment easier to follow while giving people clear explanations and a human-review path for uncertain cases.",
     "response": "Combine receipt OCR, structured-data scoring in Python and GTM claim-card scoring with human review. The demo policies and training records are synthetic; its outcomes do not establish manufacturer coverage or real-world model accuracy.",
     "caseStudyContent": "## Overview\nAssureX is a competition prototype that explores a more legible warranty-claim intake and review flow.\n\n## Assessment flow\n1. Capture claim details and extract receipt fields with OCR.\n2. Compare structured data using Python scoring.\n3. Include a Google Teachable Machine claim-card signal.\n4. Route uncertain cases to human review.\n\n## Important scope\nPolicies and training records are synthetic examples. The prototype does not establish manufacturer warranties, real-world accuracy, or production readiness."
@@ -53,7 +69,11 @@
     "address": "Portfolio concept · not commissioned",
     "theme": "field",
     "brand": "FIELD / FORM",
-    "nav": ["Studio", "Projects", "Notes"],
+    "nav": [
+      "Studio",
+      "Projects",
+      "Notes"
+    ],
     "action": "Let’s talk",
     "eyebrow": "Independent by nature",
     "headline": "Made for the curious.",
@@ -63,7 +83,11 @@
     "image": "",
     "imageAlt": "",
     "description": "A self-directed visual concept for an imaginary independent studio, exploring a grounded identity, confident typography and generous editorial space. This is not commissioned client work.",
-    "tags": ["Brand identity", "Web design", "Creative direction"],
+    "tags": [
+      "Brand identity",
+      "Web design",
+      "Creative direction"
+    ],
     "challenge": "Explore a distinctive studio identity without implying a real client or business relationship.",
     "response": "Pair a confident wordmark with natural colors, spacious layouts and editorial project stories.",
     "caseStudyContent": "## Concept brief\nA self-initiated brand and web direction for an imaginary independent studio.\n\n## Visual direction\nExplore a confident wordmark, natural colors, and generous editorial layouts.\n\n> Speculative exercise — not commissioned client work."
