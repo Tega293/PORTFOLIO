@@ -1,73 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
+import defaultProjects from './projects.json';
 import './App.css';
-
-const projects = [
-  {
-    number: '01',
-    name: 'Recipe Central',
-    category: 'Food & lifestyle',
-    address: 'clone-pi-amber.vercel.app',
-    theme: 'recipe-central',
-    brand: 'Recipe Central',
-    nav: ['Recipes', 'Drinks', 'Contact'],
-    action: 'Find a recipe',
-    eyebrow: 'GOOD FOOD, MADE MEMORABLE',
-    headline: 'Find your next favourite.',
-    previewCopy: 'Thoughtful recipes and a little inspiration for whatever is on the menu.',
-    previewLink: 'Explore the home page',
-    liveUrl: 'https://clone-pi-amber.vercel.app/',
-    description:
-      'Recipe Central welcomes home cooks with a food-photo carousel, quick recipe search and nine featured dishes, then invites them to explore a collection of 45 recipes from around the world.',
-    tags: ['Homepage experience', 'Featured recipes', 'Responsive React app'],
-    challenge:
-      'Make a growing recipe collection feel welcoming from the first visit, while giving people a quick way to find inspiration and start browsing.',
-    response:
-      'Lead with vibrant food photography, a clear search entry point and a curated nine-recipe preview that connects straight to the full collection.',
-  },
-  {
-    number: '02',
-    name: 'AssureX',
-    category: 'Warranty claim assessment',
-    address: 'assurrex-odyw.vercel.app',
-    theme: 'assurrex',
-    brand: 'ASSUREX',
-    nav: ['How it works', 'Coverage', 'About'],
-    action: 'Start a claim',
-    eyebrow: 'SMART WARRANTY CLAIM ASSESSMENT',
-    headline: 'Warranty claims, made clearer.',
-    previewCopy: 'Upload your receipt, check coverage, and understand our recommendation before you proceed.',
-    previewLink: 'Explore AssureX',
-    liveUrl: 'https://assurrex-odyw.vercel.app/',
-    description:
-      'AssureX is a competition prototype for warranty-claim intake, receipt OCR, Python-based structured-data scoring, Google Teachable Machine (GTM) claim-card scoring and human review. Its policies and model-training records are synthetic examples, not manufacturer warranties or evidence of real-world accuracy.',
-    tags: ['Warranty claim intake', 'Receipt OCR & Python scoring', 'GTM scoring & human review'],
-    challenge:
-      'Make a complex claim assessment easier to follow while giving people clear explanations and a human-review path for uncertain cases.',
-    response:
-      'Combine receipt OCR, structured-data scoring in Python and GTM claim-card scoring with human review. The demo policies and training records are synthetic; its outcomes do not establish manufacturer coverage or real-world model accuracy.',
-  },
-  {
-    number: '03',
-    name: 'Form & Field',
-    category: 'Brand & web',
-    address: 'formandfield.studio',
-    theme: 'field',
-    brand: 'FORM & FIELD',
-    nav: ['Studio', 'Projects', 'Notes'],
-    action: 'Let’s talk',
-    eyebrow: 'Independent by nature',
-    headline: 'Made for the curious.',
-    previewCopy: 'Thoughtful identities for places with a point of view.',
-    previewLink: 'Meet the studio',
-    description:
-      'A small independent studio needed a digital home that felt grounded yet unmistakably its own. Form & Field brings tactile materials, confident typography and generous editorial space into one flexible identity.',
-    tags: ['Brand identity', 'Web design', 'Creative direction'],
-    challenge:
-      'Capture a hands-on studio practice without leaning on the familiar language of a generic agency site.',
-    response:
-      'Create a modular visual system that pairs a confident wordmark with natural color, spacious layouts and vivid project stories.',
-  },
-];
 
 const processSteps = [
   {
@@ -146,9 +79,20 @@ const moreNavItems = [
 ];
 
 const portfolioStats = [
-  { key: 'projects', label: 'Projects delivered', target: 128, suffix: '+' },
-  { key: 'clients', label: 'Satisfied customers', target: 128, suffix: '+' },
-  { key: 'goal', label: 'Project goal', target: 1000, suffix: '+' },
+  { key: 'projects', label: 'Live prototypes', target: 2, suffix: '' },
+  { key: 'tools', label: 'Interactive AI demos', target: 5, suffix: '' },
+];
+
+const portfolioSections = [
+  ['top', 'Home'], ['work', 'Selected work'], ['ai-lab', 'AI Lab'], ['approach', 'Approach'],
+  ['about', 'About'], ['experience', 'Résumé'], ['certifications', 'Certificates'], ['socials', 'Socials'], ['contact', 'Contact'], ['faq', 'FAQ'],
+];
+
+const portfolioFaqs = [
+  { question: 'What kind of work are you open to?', answer: 'I’m open to AI/ML engineering, web development and product design roles, as well as freelance projects and collaborations.' },
+  { question: 'Can I explore the AI Lab demos?', answer: 'Yes. The diagrams are small, browser-based teaching tools. Their labels explain what each control changes; the examples are illustrative and are not trained production models.' },
+  { question: 'How do I discuss a project?', answer: 'Use the email or WhatsApp links on this page. They open your own mail or messaging app, and you choose what information to send.' },
+  { question: 'Are the projects available to inspect?', answer: 'Where a live link is available, you can open the project directly. Some sites prevent embedded previews, so use the direct link if an in-page preview cannot load.' },
 ];
 
 const socialLinks = [
@@ -233,29 +177,46 @@ function AlgorithmMark() {
 }
 
 function ProjectArtwork({ project }) {
+  const [previewLoaded, setPreviewLoaded] = useState(false);
   if (project.liveUrl) {
     return (
-      <a className="project-artwork live-project-artwork" href={project.liveUrl} target="_blank" rel="noreferrer" aria-label={`Open the ${project.name} home page`}>
+      <div className="project-artwork live-project-artwork">
         <div className="browser-frame">
           <div className="browser-bar">
             <i /><i /><i />
             <span>{project.address}</span>
           </div>
           <div className="project-live-viewport">
-            <iframe
-              title={`${project.name} home page preview`}
-              src={project.liveUrl}
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              aria-hidden="true"
-              tabIndex={-1}
-            />
+            {previewLoaded ? (
+              <iframe
+                title={`${project.name} website preview. Content is provided by ${project.address}.`}
+                src={project.liveUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                sandbox="allow-scripts"
+              />
+            ) : project.image ? (
+              <div className="project-image-preview">
+                <img src={project.image} alt={project.imageAlt || `${project.name} project preview`} loading="lazy" />
+                <button type="button" onClick={() => setPreviewLoaded(true)} aria-label={`Load the live ${project.name} website preview`}>Load live preview</button>
+              </div>
+            ) : (
+              <div className="external-preview-consent">
+                <span aria-hidden="true">↗</span>
+                <strong>External website preview</strong>
+                <p>Load content from {project.address}. That site may receive your connection data and apply its own privacy settings.</p>
+                <button type="button" onClick={() => setPreviewLoaded(true)} aria-label={`Load the ${project.name} preview from ${project.address}`}>Load preview</button>
+              </div>
+            )}
           </div>
         </div>
-        <span className="project-live-open">Open {project.name} <span aria-hidden="true">↗</span></span>
-      </a>
+        <div className="project-live-open"><span>{previewLoaded ? `${project.name} preview loaded` : 'Preview waits for your permission'}</span>{previewLoaded && <button className="project-preview-unload" type="button" onClick={() => setPreviewLoaded(false)}>Unload preview</button>}<a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Open {project.name} <span aria-hidden="true">↗</span></a></div>
+      </div>
     );
+  }
+
+  if (project.image) {
+    return <figure className={`project-artwork ${project.theme} project-image-artwork`}><img src={project.image} alt={project.imageAlt || `${project.name} project preview`} loading="lazy" /></figure>;
   }
 
   return (
@@ -307,23 +268,81 @@ function ProjectArtwork({ project }) {
   );
 }
 
-function ProjectCard({ project }) {
+function renderInlineMarkdown(text, keyPrefix) {
+  const tokenPattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\(https?:\/\/[^)\s]+\))/g;
+  return text.split(tokenPattern).filter(Boolean).map((token, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (token.startsWith('**')) return <strong key={key}>{token.slice(2, -2)}</strong>;
+    if (token.startsWith('*')) return <em key={key}>{token.slice(1, -1)}</em>;
+    if (token.startsWith('`')) return <code key={key}>{token.slice(1, -1)}</code>;
+    if (token.startsWith('[')) {
+      const match = token.match(/^\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)$/);
+      if (match) return <a key={key} href={match[2]} target="_blank" rel="noopener noreferrer">{match[1]}</a>;
+    }
+    return token;
+  });
+}
+
+function MarkdownContent({ content }) {
+  const lines = (content || '').split(/\r?\n/);
+  const blocks = [];
+  let index = 0;
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (!line) { index += 1; continue; }
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      const Tag = heading[1].length === 1 ? 'h3' : 'h4';
+      blocks.push(<Tag key={`heading-${index}`}>{renderInlineMarkdown(heading[2], `heading-${index}`)}</Tag>);
+      index += 1;
+      continue;
+    }
+    if (line.startsWith('> ')) {
+      blocks.push(<blockquote key={`quote-${index}`}>{renderInlineMarkdown(line.slice(2), `quote-${index}`)}</blockquote>);
+      index += 1;
+      continue;
+    }
+    if (/^[-*]\s+/.test(line)) {
+      const items = [];
+      while (index < lines.length && /^\s*[-*]\s+/.test(lines[index])) {
+        items.push(lines[index].trim().replace(/^[-*]\s+/, ''));
+        index += 1;
+      }
+      const listEnd = index;
+      blocks.push(<ul key={`list-${listEnd}`}>{items.map((item, itemIndex) => <li key={`item-${itemIndex}`}>{renderInlineMarkdown(item, `item-${listEnd}-${itemIndex}`)}</li>)}</ul>);
+      continue;
+    }
+    const paragraph = [line];
+    index += 1;
+    while (index < lines.length && lines[index].trim() && !/^(#{1,3})\s+|^>\s+|^[-*]\s+/.test(lines[index].trim())) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    const paragraphEnd = index;
+    blocks.push(<p key={`paragraph-${paragraphEnd}`}>{paragraph.map((part, partIndex) => <Fragment key={`line-${partIndex}`}>{partIndex > 0 && <br />}{renderInlineMarkdown(part, `paragraph-${paragraphEnd}-${partIndex}`)}</Fragment>)}</p>);
+  }
+  return <div className="markdown-content">{blocks}</div>;
+}
+
+function ProjectCard({ project, isSaved, onToggleSaved, onViewed }) {
   return (
-    <article className={`project-row ${project.theme}`} data-reveal>
+    <article className={`project-row ${project.theme}`} data-reveal id={`project-${project.id}`}>
       <ProjectArtwork project={project} />
       <div className="project-copy">
         <div className="project-meta"><span>{project.number} / {project.category}</span><span>{project.liveUrl ? 'Live project' : 'Concept study'}</span></div>
         <h3>{project.name}</h3>
+        <button className={`project-save-button${isSaved ? ' is-saved' : ''}`} type="button" aria-pressed={isSaved} onClick={() => onToggleSaved(project.id)}>{isSaved ? 'Saved for later ✓' : 'Save for later ♡'}</button>
         <p>{project.description}</p>
         <div className="project-tags">
           {project.tags.map((tag) => <span key={tag}>{tag}</span>)}
         </div>
-        {project.liveUrl && <a className="project-live-link" href={project.liveUrl} target="_blank" rel="noreferrer">Visit {project.name} <span aria-hidden="true">↗</span></a>}
-        <details className="case-study">
+        {project.liveUrl && <a className="project-live-link" href={project.liveUrl} target="_blank" rel="noopener noreferrer">Visit {project.name} <span aria-hidden="true">↗</span></a>}
+        <details className="case-study" onToggle={(event) => { if (event.currentTarget.open) onViewed(project.id); }}>
           <summary>Explore the case study</summary>
           <div className="case-study-body">
             <div><span>The challenge</span><p>{project.challenge}</p></div>
             <div><span>The response</span><p>{project.response}</p></div>
+            {project.caseStudyContent && <div className="case-study-longform"><span>Case study</span><MarkdownContent content={project.caseStudyContent} /></div>}
           </div>
         </details>
       </div>
@@ -448,10 +467,10 @@ function EmbeddingMapper({ onTone }) {
   return (
     <div className="lab-tool-display embedding-display">
       <div className="lab-display-heading"><span>2D SEMANTIC SPACE</span><button className="mask-toggle" type="button" onClick={reset}>↺ Reset points</button></div>
-      <svg ref={svgRef} className="embedding-diagram" viewBox="0 0 460 260" role="img" aria-label="Draggable two-dimensional embedding map" onPointerMove={updatePointer} onPointerUp={() => setDragging(null)} onPointerCancel={() => setDragging(null)}>
+      <svg ref={svgRef} className="embedding-diagram" viewBox="0 0 460 260" role="group" aria-label="Draggable two-dimensional embedding map" onPointerMove={updatePointer} onPointerUp={() => setDragging(null)} onPointerCancel={() => setDragging(null)}>
         {[1, 2, 3, 4, 5, 6, 7].map((i) => <g key={i}><line x1={i * 57.5} y1="30" x2={i * 57.5} y2="230" className="embedding-gridline" /><line x1="30" y1={i * 28.75} x2="430" y2={i * 28.75} className="embedding-gridline" /></g>)}
         {neighbors.map((point) => <line key={`link-${point.id}`} x1={anchor.x} y1={anchor.y} x2={point.x} y2={point.y} className="embedding-neighbor-line" />)}
-        {points.map((point) => <g key={point.id} role="button" tabIndex="0" aria-label={`${point.label} embedding point; drag to move`} className={`embedding-point${selected === point.id ? ' is-selected' : ''}${neighbors.some((item) => item.id === point.id) ? ' is-neighbor' : ''}`} transform={`translate(${point.x} ${point.y})`} onPointerDown={(event) => { setSelected(point.id); setDragging(point.id); event.currentTarget.ownerSVGElement.setPointerCapture(event.pointerId); onTone(450); }} onClick={() => setSelected(point.id)} onKeyDown={(event) => { if (event.key.startsWith('Arrow')) { event.preventDefault(); setSelected(point.id); movePoint(point.id, event.key === 'ArrowLeft' ? -8 : event.key === 'ArrowRight' ? 8 : 0, event.key === 'ArrowUp' ? -8 : event.key === 'ArrowDown' ? 8 : 0); } }}>
+        {points.map((point) => <g key={point.id} role="button" tabIndex="0" aria-label={`${point.label} embedding point; drag to move`} className={`embedding-point${selected === point.id ? ' is-selected' : ''}${neighbors.some((item) => item.id === point.id) ? ' is-neighbor' : ''}`} transform={`translate(${point.x} ${point.y})`} onPointerDown={(event) => { setSelected(point.id); setDragging(point.id); event.currentTarget.ownerSVGElement.setPointerCapture(event.pointerId); onTone(450); }} onClick={() => setSelected(point.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(point.id); onTone(450); } else if (event.key.startsWith('Arrow')) { event.preventDefault(); setSelected(point.id); movePoint(point.id, event.key === 'ArrowLeft' ? -8 : event.key === 'ArrowRight' ? 8 : 0, event.key === 'ArrowUp' ? -8 : event.key === 'ArrowDown' ? 8 : 0); } }}>
           <circle r={selected === point.id ? 10 : 7} /><text x="13" y="4">{point.label}</text>
         </g>)}
       </svg>
@@ -631,15 +650,117 @@ function ArchitectureLab() {
   );
 }
 
-function App() {
+function PortfolioApp() {
   const portfolioRef = useRef(null);
   const themeTimer = useRef(null);
+  const toastTimer = useRef(null);
+  const searchRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('work');
   const [theme, setTheme] = useState(getSavedTheme);
   const [themeTransition, setThemeTransition] = useState(false);
-  const [statCounts, setStatCounts] = useState({ projects: 0, clients: 0, goal: 0 });
+  const [statCounts, setStatCounts] = useState({ projects: 0, tools: 0 });
   const [clockNow, setClockNow] = useState(() => new Date());
+  const [projects, setProjects] = useState(defaultProjects);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('featured');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [savedIds, setSavedIds] = useState(() => { try { const value = JSON.parse(window.localStorage.getItem('tegabyte-saved-projects') || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } });
+  const [recentIds, setRecentIds] = useState(() => { try { const value = JSON.parse(window.localStorage.getItem('tegabyte-recent-projects') || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } });
+  const [recentSectionIds, setRecentSectionIds] = useState(() => { try { const value = JSON.parse(window.localStorage.getItem('tegabyte-recent-sections') || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } });
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [fontScale, setFontScale] = useState(() => { try { return Number(window.localStorage.getItem('tegabyte-font-scale')) || 1; } catch { return 1; } });
+  const [toast, setToast] = useState('');
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareIds, setCompareIds] = useState(() => [defaultProjects[0]?.id || '', defaultProjects[1]?.id || '']);
+  const [estimatedMinutes, setEstimatedMinutes] = useState(1);
+  const [faqQuery, setFaqQuery] = useState('');
+
+  function notify(message) {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(''), 2600);
+  }
+
+  function toggleSaved(projectId) {
+    const next = savedIds.includes(projectId) ? savedIds.filter((id) => id !== projectId) : [...savedIds, projectId];
+    setSavedIds(next);
+    try { window.localStorage.setItem('tegabyte-saved-projects', JSON.stringify(next)); } catch { /* Save for this session still works. */ }
+    notify(next.includes(projectId) ? 'Saved to your reading list.' : 'Removed from your reading list.');
+  }
+
+  function markViewed(projectId) {
+    setRecentIds((current) => {
+      const next = [projectId, ...current.filter((id) => id !== projectId)].slice(0, 5);
+      try { window.localStorage.setItem('tegabyte-recent-projects', JSON.stringify(next)); } catch { /* Recent items remain available for this session. */ }
+      return next;
+    });
+  }
+
+  async function sharePage() {
+    const shareData = { title: document.title, text: 'Explore my portfolio and interactive AI lab.', url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else { await navigator.clipboard.writeText(shareData.url); notify('Portfolio link copied.'); }
+    } catch (error) { if (error.name !== 'AbortError') notify('Could not share this page from this browser.'); }
+  }
+
+  async function copyText(value, label) {
+    try { await navigator.clipboard.writeText(value); notify(`${label} copied to clipboard.`); }
+    catch { notify('Clipboard access is unavailable in this browser.'); }
+  }
+
+  const visibleProjects = projects.filter((project) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesQuery = !query || [project.name, project.category, project.description, ...(project.tags || []), project.caseStudyContent].join(' ').toLowerCase().includes(query);
+    const matchesCategory = categoryFilter === 'all' || project.category === categoryFilter;
+    const matchesSaved = !showSavedOnly || savedIds.includes(project.id);
+    return matchesQuery && matchesCategory && matchesSaved;
+  }).sort((first, second) => sortBy === 'name' ? first.name.localeCompare(second.name) : sortBy === 'category' ? first.category.localeCompare(second.category) || first.name.localeCompare(second.name) : projects.indexOf(first) - projects.indexOf(second));
+  const recentProjects = recentIds.map((id) => projects.find((project) => project.id === id)).filter(Boolean);
+  const comparedProjects = compareIds.map((id) => projects.find((project) => project.id === id)).filter(Boolean);
+
+  useEffect(() => {
+    try { window.localStorage.setItem('tegabyte-font-scale', String(fontScale)); } catch { /* Font size remains active for this session. */ }
+    document.documentElement.style.setProperty('--reading-scale', String(fontScale));
+  }, [fontScale]);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateProgress = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        setReadingProgress(scrollable > 0 ? Math.min(100, Math.max(0, window.scrollY / scrollable * 100)) : 0);
+      });
+    };
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener('scroll', updateProgress); window.removeEventListener('resize', updateProgress); };
+  }, []);
+
+  useEffect(() => {
+    const words = document.querySelector('main#top')?.innerText.match(/\b[\w’'-]+\b/g)?.length || 0;
+    setEstimatedMinutes(Math.max(1, Math.ceil(words / 220)));
+  }, [projects]);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target;
+      const typing = target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+      if (typing) { if (event.key === 'Escape') target.blur(); return; }
+      if (event.key === '/') { event.preventDefault(); searchRef.current?.focus(); }
+      if (event.key.toLowerCase() === 't') switchTheme();
+      if (event.key === '?') setShowShortcuts((value) => !value);
+      if (event.key === 'Escape') setShowShortcuts(false);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   useEffect(() => {
     document.documentElement.style.colorScheme = theme;
@@ -658,7 +779,18 @@ function App() {
     return () => window.clearInterval(clock);
   }, []);
 
-  useEffect(() => () => window.clearTimeout(themeTimer.current), []);
+  useEffect(() => {
+    let isCurrent = true;
+    fetch('/projects.json', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((items) => {
+        if (isCurrent && Array.isArray(items) && items.every((item) => item && item.id && item.name)) setProjects(items);
+      })
+      .catch(() => {});
+    return () => { isCurrent = false; };
+  }, []);
+
+  useEffect(() => () => { window.clearTimeout(themeTimer.current); window.clearTimeout(toastTimer.current); }, []);
 
   useEffect(() => {
     const revealElements = Array.from(document.querySelectorAll('[data-reveal]'));
@@ -718,7 +850,14 @@ function App() {
       const visible = entries
         .filter((entry) => entry.isIntersecting)
         .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
-      if (visible) setActiveSection(visible.target.id);
+      if (visible) {
+        setActiveSection(visible.target.id);
+        setRecentSectionIds((current) => {
+          const next = [visible.target.id, ...current.filter((id) => id !== visible.target.id)].slice(0, 5);
+          try { window.localStorage.setItem('tegabyte-recent-sections', JSON.stringify(next)); } catch { /* Recent sections remain available for this session. */ }
+          return next;
+        });
+      }
     }, { rootMargin: '-25% 0px -60% 0px', threshold: [0, 0.2, 0.5] });
 
     sections.forEach((section) => observer.observe(section));
@@ -815,7 +954,17 @@ function App() {
           </nav>
         </header>
 
-        <main id="top">
+        <div className="reader-tools" aria-label="Reading tools">
+          <span className="reading-time"><i aria-hidden="true">◷</i> {estimatedMinutes} min read</span>
+          <label className="jump-control">Jump to <select aria-label="Jump to a section" defaultValue="top" onChange={(event) => document.getElementById(event.target.value)?.scrollIntoView({ behavior: 'smooth' })}>{portfolioSections.map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select></label>
+          <div className="text-size-controls" role="group" aria-label="Text size"><span>Text</span><button type="button" onClick={() => setFontScale((value) => Math.max(.9, +(value - .1).toFixed(1)))} aria-label="Decrease text size">A−</button><button type="button" onClick={() => setFontScale((value) => Math.min(1.2, +(value + .1).toFixed(1)))} aria-label="Increase text size">A+</button></div>
+          <button className="reader-tool-button" type="button" onClick={sharePage}>Share page ↗</button>
+          <button className={`reader-tool-button${showSavedOnly ? ' is-active' : ''}`} type="button" aria-pressed={showSavedOnly} onClick={() => { setShowSavedOnly((value) => !value); document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' }); }}>Saved ({savedIds.length})</button>
+          <button className="reader-tool-button" type="button" onClick={() => setShowShortcuts(true)} aria-label="Show keyboard shortcuts">Shortcuts ?</button>
+        </div>
+        {recentSectionIds.length > 1 && <div className="recent-pages"><span>Recently visited</span>{recentSectionIds.filter((id) => id !== 'top').map((id) => <a href={`#${id}`} key={id}>{portfolioSections.find(([sectionId]) => sectionId === id)?.[1] || id} ↗</a>)}</div>}
+
+        <main id="top" inert={menuOpen ? true : undefined}>
           <section className="hero" aria-labelledby="hero-title" data-reveal>
             <div className="hero-copy">
               <div className="eyebrow"><span className="eyebrow-dot" />AI/ML Engineer · Web Developer · Product Designer</div>
@@ -840,7 +989,16 @@ function App() {
               <div><span className="section-kicker">A few things I’ve made</span><h2 id="work-title">Selected work</h2></div>
               <a className="text-link" href="#contact">Have a project in mind? <span aria-hidden="true">↗</span></a>
             </div>
-            <div className="projects-list">{projects.map((project) => <ProjectCard key={project.number} project={project} />)}</div>
+            <div className="project-discovery" role="search">
+              <label className="smart-search"><span aria-hidden="true">⌕</span><input ref={searchRef} type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search projects, skills, or ideas…" aria-label="Search portfolio projects" /><kbd>/</kbd></label>
+              <label className="project-filter">Filter <select aria-label="Filter projects by category" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}><option value="all">All categories</option>{Array.from(new Set(projects.map((project) => project.category))).filter(Boolean).map((category) => <option value={category} key={category}>{category}</option>)}</select></label>
+              <label className="project-filter">Sort <select aria-label="Sort projects" value={sortBy} onChange={(event) => setSortBy(event.target.value)}><option value="featured">Featured</option><option value="name">Name A–Z</option><option value="category">Category</option></select></label>
+              <button className={`reader-tool-button compare-toggle${showCompare ? ' is-active' : ''}`} type="button" aria-pressed={showCompare} onClick={() => setShowCompare((value) => !value)}>Compare projects</button>
+            </div>
+            {searchQuery && <div className="smart-search-results"><span>Jump to</span>{portfolioSections.filter(([id, label]) => label.toLowerCase().includes(searchQuery.toLowerCase()) || (id === 'ai-lab' && 'artificial intelligence'.includes(searchQuery.toLowerCase()))).slice(0, 4).map(([id, label]) => <a href={`#${id}`} key={id}>{label} ↗</a>)}</div>}
+            {recentProjects.length > 0 && <div className="recent-projects"><span>Recently explored</span>{recentProjects.map((project) => <a href={`#project-${project.id}`} key={project.id}>{project.name} ↗</a>)}</div>}
+            {visibleProjects.length ? <div className="projects-list">{visibleProjects.map((project) => <ProjectCard key={project.id} project={project} isSaved={savedIds.includes(project.id)} onToggleSaved={toggleSaved} onViewed={markViewed} />)}</div> : <div className="empty-project-state"><strong>No projects match that view.</strong><button type="button" onClick={() => { setSearchQuery(''); setCategoryFilter('all'); setShowSavedOnly(false); }}>Clear search and filters</button></div>}
+            {showCompare && projects.length > 1 && <div className="project-comparison"><div className="comparison-heading"><div><span className="section-kicker">Side by side</span><h3>Compare selected work</h3></div><p>Choose two projects to compare their published details.</p></div><div className="comparison-selectors">{[0, 1].map((slot) => <label key={slot}>Project {slot + 1}<select value={compareIds[slot] || ''} onChange={(event) => setCompareIds((current) => current.map((id, index) => index === slot ? event.target.value : id))}>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>)}</div>{comparedProjects.length === 2 && <div className="comparison-table-wrap"><table className="comparison-table"><caption>Project details comparison</caption><thead><tr><th scope="col">Detail</th>{comparedProjects.map((project) => <th scope="col" key={project.id}>{project.name}</th>)}</tr></thead><tbody><tr><th scope="row">Category</th>{comparedProjects.map((project) => <td key={project.id}>{project.category}</td>)}</tr><tr><th scope="row">Overview</th>{comparedProjects.map((project) => <td key={project.id}>{project.description}</td>)}</tr><tr><th scope="row">Focus areas</th>{comparedProjects.map((project) => <td key={project.id}>{(project.tags || []).join(' · ') || 'Details to come'}</td>)}</tr><tr><th scope="row">Availability</th>{comparedProjects.map((project) => <td key={project.id}>{project.liveUrl ? <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">Open live project ↗</a> : 'Case study'}</td>)}</tr></tbody></table></div>}</div>}
           </section>
 
           <section className="ai-lab section" id="ai-lab" aria-labelledby="ai-lab-title" data-reveal>
@@ -854,7 +1012,7 @@ function App() {
           <section className="portfolio-stats section" id="portfolio-stats" aria-labelledby="stats-title" data-reveal>
             <div className="stats-heading">
               <div><span className="section-kicker">A snapshot of the journey</span><h2 id="stats-title">Building with purpose.</h2></div>
-              <p>Small, considered steps add up to ambitious work. Here’s the momentum I’m working toward.</p>
+              <p>A factual snapshot of the work and browser-based experiments currently shown here.</p>
             </div>
             <div className="stats-grid">
               {portfolioStats.map(({ key, label, suffix }) => (
@@ -929,7 +1087,7 @@ function App() {
                     <span className="certificate-icon" aria-hidden="true">↗</span>
                     <div><h3>{certificate.title}</h3><p>{certificate.issuer}{certificate.year ? ` · ${certificate.year}` : ''}</p></div>
                     {certificate.url || certificate.file ? (
-                      <a href={certificate.url || `/certifications/${certificate.file}`} target="_blank" rel="noreferrer">View certificate <span aria-hidden="true">↗</span></a>
+                      <a href={certificate.url || `/certifications/${certificate.file}`} target="_blank" rel="noopener noreferrer">View certificate <span aria-hidden="true">↗</span></a>
                     ) : (
                       <span className="certificate-pending">Add document in <code>/public/certifications</code></span>
                     )}
@@ -951,7 +1109,7 @@ function App() {
             </div>
             <div className="social-grid">
               {socialLinks.map((social) => (
-                <a className={`social-card social-${social.icon}`} href={social.href} key={social.name} target="_blank" rel="noreferrer" aria-label={`${social.name}: ${social.detail}`}>
+                <a className={`social-card social-${social.icon}`} href={social.href} key={social.name} target="_blank" rel="noopener noreferrer" aria-label={`${social.name}: ${social.detail}`}>
                   <span className="social-icon"><SocialGlyph type={social.icon} /></span>
                   <span className="social-copy"><strong>{social.name}</strong><small>{social.detail}</small></span>
                   <span className="social-arrow" aria-hidden="true">↗</span>
@@ -960,18 +1118,334 @@ function App() {
             </div>
           </section>
 
+          <section className="faq-section section" id="faq" aria-labelledby="faq-title" data-reveal>
+            <div className="section-heading"><div><span className="section-kicker">A few useful details</span><h2 id="faq-title">Questions, answered.</h2></div><p>Search for the details you need, then open a question to read more.</p></div>
+            <label className="faq-search"><span aria-hidden="true">⌕</span><input type="search" value={faqQuery} onChange={(event) => setFaqQuery(event.target.value)} placeholder="Search questions…" aria-label="Search frequently asked questions" /></label>
+            <div className="faq-list">{portfolioFaqs.filter((item) => `${item.question} ${item.answer}`.toLowerCase().includes(faqQuery.toLowerCase())).map((item) => <details key={item.question}><summary>{item.question}<span aria-hidden="true">＋</span></summary><p>{item.answer}</p></details>)}{!portfolioFaqs.some((item) => `${item.question} ${item.answer}`.toLowerCase().includes(faqQuery.toLowerCase())) && <p className="faq-empty">No matching answer yet. Try another phrase or contact me directly.</p>}</div>
+          </section>
+
           <section className="contact-card" id="contact" aria-labelledby="contact-title" data-reveal>
             <div><span className="section-kicker">Have a good one in mind?</span><h2 id="contact-title">Let’s make something meaningful.</h2><p>Share the challenge, the big idea or the early sketch. I’m always happy to start with a thoughtful conversation.</p></div>
-            <a className="button button-primary" href="mailto:oyibochaoghenetega5@gmail.com?subject=Let%E2%80%99s%20make%20something%20meaningful">Start a conversation <span aria-hidden="true">↗</span></a>
+            <div className="contact-actions"><a className="button button-primary" href="mailto:oyibochaoghenetega5@gmail.com?subject=Let%E2%80%99s%20make%20something%20meaningful">Start a conversation <span aria-hidden="true">↗</span></a><button type="button" className="copy-contact-button" onClick={() => copyText('oyibochaoghenetega5@gmail.com', 'Email address')}>Copy email</button><button type="button" className="copy-contact-button" onClick={() => copyText('+2347047175423', 'WhatsApp number')}>Copy WhatsApp</button></div>
           </section>
 
           <footer className="site-footer">
-            <span><strong>Let’s make something meaningful.</strong><a href="mailto:oyibochaoghenetega5@gmail.com">oyibochaoghenetega5@gmail.com</a></span>
+            <span><strong>Oghenetega Oyibocha Emmanuel · Tegabyte</strong><a href="mailto:oyibochaoghenetega5@gmail.com">oyibochaoghenetega5@gmail.com</a><a href="https://wa.me/2347047175423" target="_blank" rel="noopener noreferrer">WhatsApp: +234 704 717 5423</a></span>
             <span>© {new Date().getFullYear()} Tegabyte <i>·</i> Built with intention</span>
+            <nav className="footer-legal" aria-label="Policies and accessibility"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/cookies.html">Cookies</a><a href="/refund-policy.html">Refunds</a><a href="/accessibility.html">Accessibility</a></nav>
           </footer>
         </main>
       </div>
+      <div className="reading-progress-track" aria-hidden="true"><span style={{ transform: `scaleX(${readingProgress / 100})` }} /></div>
+      <button className={`back-to-top${readingProgress > 8 ? ' is-visible' : ''}`} type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">↑<span>Top</span></button>
+      {toast && <div className="site-toast" role="status" aria-live="polite">{toast}</div>}
+      {showShortcuts && <div className="shortcuts-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowShortcuts(false); }}><section className="shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title"><button className="shortcuts-close" type="button" onClick={() => setShowShortcuts(false)} aria-label="Close keyboard shortcuts">×</button><span className="section-kicker">Quick navigation</span><h2 id="shortcuts-title">Keyboard shortcuts</h2><p><kbd>/</kbd> Focus project search</p><p><kbd>T</kbd> Switch light or dark mode</p><p><kbd>?</kbd> Open or close this guide</p><p><kbd>Esc</kbd> Close this guide or leave a field</p></section></div>}
     </div>
+  );
+}
+
+function projectToForm(project) {
+  return {
+    ...project,
+    tagsText: (project.tags || []).join(', '),
+    navText: (project.nav || []).join(', '),
+    caseStudyContent: project.caseStudyContent || '',
+  };
+}
+
+function blankProject() {
+  return projectToForm({
+    id: 'new-project', number: '00', name: '', category: '', address: '', theme: 'field', brand: '', nav: [], action: '',
+    eyebrow: '', headline: '', previewCopy: '', previewLink: '', liveUrl: '', image: '', imageAlt: '', description: '', tags: [], challenge: '', response: '', caseStudyContent: '',
+  });
+}
+
+function slugify(value) {
+  return value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64);
+}
+
+function AdminDashboard() {
+  const [authState, setAuthState] = useState('checking');
+  const [showPassword, setShowPassword] = useState(false);
+  const [draftStatus, setDraftStatus] = useState('');
+  const [theme, setTheme] = useState(() => {
+    try { return window.localStorage.getItem('portfolio-theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
+  });
+  const [password, setPassword] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [form, setForm] = useState(blankProject);
+  const [selectedId, setSelectedId] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [baseSha, setBaseSha] = useState('');
+  const [pendingAssets, setPendingAssets] = useState({});
+  const [isBusy, setIsBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [markdownMode, setMarkdownMode] = useState('write');
+  const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try { window.localStorage.setItem('portfolio-theme', theme); } catch { /* Theme remains active for this view. */ }
+  }, [theme]);
+
+  async function requestJson(path, options = {}) {
+    const response = await fetch(path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const requestError = new Error(payload.error || `Request failed (${response.status}).`);
+      requestError.status = response.status;
+      throw requestError;
+    }
+    return payload;
+  }
+
+  async function loadProjects() {
+    const data = await requestJson('/api/cms/projects');
+    setProjects(data.projects);
+    setBaseSha(data.sha);
+    let draft = null;
+    try { draft = JSON.parse(window.sessionStorage.getItem('tegabyte-cms-draft') || 'null'); } catch { /* Ignore an unreadable session draft. */ }
+    if (draft && (draft.isCreating || data.projects.some((project) => project.id === draft.selectedId))) {
+      setIsCreating(Boolean(draft.isCreating)); setSelectedId(draft.selectedId || ''); setForm(draft.form || blankProject());
+      setDraftStatus('Restored an unsent draft from this browser tab.');
+      return;
+    }
+    if (data.projects.length) {
+      setSelectedId(data.projects[0].id);
+      setForm(projectToForm(data.projects[0]));
+      setIsCreating(false);
+    } else {
+      setSelectedId('');
+      setForm(blankProject());
+      setIsCreating(true);
+    }
+  }
+
+  useEffect(() => {
+    requestJson('/api/cms/session')
+      .then((data) => {
+        if (!data.configured) { setAuthState('unconfigured'); return; }
+        if (!data.authenticated) { setAuthState('unauthenticated'); return; }
+        return loadProjects().then(() => setAuthState('authenticated'));
+      })
+      .catch((requestError) => setAuthState(requestError.status === 503 ? 'unconfigured' : 'unauthenticated'));
+  // Session state is checked once when the admin route opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (authState !== 'authenticated') return undefined;
+    const saveTimer = window.setTimeout(() => {
+      try {
+        window.sessionStorage.setItem('tegabyte-cms-draft', JSON.stringify({ selectedId, isCreating, form }));
+        setDraftStatus('Draft auto-saved in this tab.');
+      } catch { setDraftStatus('Draft could not be saved in this browser.'); }
+    }, 450);
+    return () => window.clearTimeout(saveTimer);
+  }, [authState, selectedId, isCreating, form]);
+
+  async function login(event) {
+    event.preventDefault();
+    setIsBusy(true); setError('');
+    try {
+      await requestJson('/api/cms/session', { method: 'POST', body: JSON.stringify({ password }) });
+      setPassword('');
+      await loadProjects();
+      setAuthState('authenticated');
+    } catch (requestError) { setError(requestError.message); }
+    finally { setIsBusy(false); }
+  }
+
+  async function logout() {
+    try { await requestJson('/api/cms/session', { method: 'DELETE' }); } catch { /* Return to login even if the session expired. */ }
+    setProjects([]); setAuthState('unauthenticated'); setPassword('');
+  }
+
+  function chooseProject(project) {
+    setSelectedId(project.id); setForm(projectToForm(project)); setIsCreating(false); setShowPreview(false); setPendingAssets({}); setError(''); setNotice('');
+  }
+
+  function startNewProject() {
+    setSelectedId(''); setForm(blankProject()); setIsCreating(true); setShowPreview(false); setPendingAssets({}); setError(''); setNotice('');
+  }
+
+  function updateField(name, value) {
+    setForm((current) => ({ ...current, [name]: value, ...(name === 'name' && isCreating ? { id: slugify(value) || 'new-project' } : {}) }));
+    setNotice('');
+  }
+
+  async function selectImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) { setError('Choose a JPG, PNG, WebP, or AVIF image.'); return; }
+    if (file.size > 3 * 1024 * 1024) { setError('Images must be 3 MB or smaller.'); return; }
+    const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif' }[file.type];
+    const path = `/uploads/${slugify(form.id || form.name || 'project')}-${Date.now()}.${extension}`;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = String(reader.result || '');
+      if (!data.startsWith(`data:${file.type};base64,`)) { setError('That image could not be read.'); return; }
+      setPendingAssets((current) => ({ ...current, [path]: data }));
+      setForm((current) => ({ ...current, image: path, imageAlt: current.imageAlt || `${current.name || 'Project'} preview` }));
+      setError(''); setNotice('Image added. Publish the project to commit it to the site.');
+    };
+    reader.onerror = () => setError('That image could not be read.');
+    reader.readAsDataURL(file);
+  }
+
+  function makeProject(source, index) {
+    const { tagsText, navText, ...rest } = source;
+    return {
+      ...rest,
+      id: slugify(rest.id || rest.name),
+      number: String(index + 1).padStart(2, '0'),
+      nav: navText.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 8),
+      tags: tagsText.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 12),
+      caseStudyContent: String(rest.caseStudyContent || '').slice(0, 40000),
+    };
+  }
+
+  async function publish(nextProjects, preserveEditor = false) {
+    setIsBusy(true); setError(''); setNotice('');
+    try {
+      const normalized = nextProjects.map((project, index) => makeProject(projectToForm(project), index));
+      const uniqueIds = new Set(normalized.map((project) => project.id));
+      if (uniqueIds.size !== normalized.length) throw new Error('Each project needs a unique title/slug.');
+      if (normalized.some((project) => !project.name || !project.category || !project.description)) throw new Error('Each project needs a title, category, and short description.');
+      if (normalized.some((project) => project.liveUrl && !/^https:\/\//i.test(project.liveUrl))) throw new Error('Project links must use HTTPS.');
+      if (normalized.some((project) => project.image && !/^https:\/\//i.test(project.image) && !/^\/uploads\/[a-z0-9-]+\.(jpg|png|webp|avif)$/i.test(project.image))) throw new Error('Cover images must use HTTPS or an uploaded /uploads image.');
+      const assets = Object.entries(pendingAssets).map(([path, data]) => ({ path, data }));
+      const result = await requestJson('/api/cms/publish', { method: 'POST', body: JSON.stringify({ projects: normalized, baseSha, assets }) });
+      setProjects(normalized); setBaseSha(result.sha); setPendingAssets({});
+      if (preserveEditor) {
+        setSelectedId(selectedId); setForm(form);
+      } else if (normalized.length) {
+        const savedId = isCreating ? normalized[normalized.length - 1].id : slugify(form.id || form.name);
+        const selected = normalized.find((project) => project.id === savedId) || normalized[0];
+        setSelectedId(selected.id); setForm(projectToForm(selected)); setIsCreating(false);
+      } else { setSelectedId(''); setForm(blankProject()); setIsCreating(true); }
+      setNotice(`Published commit ${result.commitSha.slice(0, 7)} to ${result.branch}. The connected deployment will update after its build completes.`);
+    } catch (requestError) {
+      setError(requestError.status === 409 ? 'The catalog changed on GitHub since you opened it. Reload the latest version before publishing to avoid overwriting someone else’s changes.' : requestError.message);
+    } finally { setIsBusy(false); }
+  }
+
+  async function saveProject(event) {
+    event.preventDefault();
+    const current = makeProject(form, isCreating ? projects.length : Math.max(0, projects.findIndex((project) => project.id === selectedId)));
+    const next = isCreating ? [...projects, current] : projects.map((project) => project.id === selectedId ? current : project);
+    await publish(next);
+  }
+
+  async function removeProject() {
+    const selected = projects.find((project) => project.id === selectedId);
+    if (!selected || !window.confirm(`Remove “${selected.name}” from the live portfolio? This publishes the removal immediately.`)) return;
+    await publish(projects.filter((project) => project.id !== selectedId));
+  }
+
+  async function moveProject(projectId, offset) {
+    const index = projects.findIndex((project) => project.id === projectId);
+    const target = index + offset;
+    if (index < 0 || target < 0 || target >= projects.length) return;
+    const reordered = [...projects];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    const numbered = reordered.map((project, itemIndex) => ({ ...project, number: String(itemIndex + 1).padStart(2, '0') }));
+    await publish(numbered, true);
+  }
+
+  if (authState === 'checking') return <div className="cms-gate" data-theme={theme}><p>Checking CMS access…</p></div>;
+  if (authState === 'unconfigured') return (
+    <div className="cms-gate" data-theme={theme}><section className="cms-login-card"><span className="cms-kicker">Tegabyte · Admin</span><h1>CMS setup needed</h1><p>The admin is protected, but its server-side GitHub credentials are not configured yet. Follow the secure deployment steps in <code>CMS_SETUP.md</code>. Do not place credentials in React code or browser storage.</p><a href="/">Return to portfolio</a></section></div>
+  );
+  if (authState === 'unauthenticated') return (
+    <div className="cms-gate" data-theme={theme}><form className="cms-login-card" onSubmit={login}><span className="cms-kicker">Tegabyte · Private admin</span><h1>Sign in to manage projects.</h1><p>Publishing changes writes a commit to the portfolio repository and starts the connected deployment.</p><label htmlFor="cms-password">Admin password</label><div className="cms-password-field"><input id="cms-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-pressed={showPassword}>{showPassword ? 'Hide' : 'Show'}</button></div><button className="cms-primary-button" type="submit" disabled={isBusy}>{isBusy ? 'Signing in…' : 'Sign in securely'}</button>{error && <p className="cms-error" role="alert">{error}</p>}<a href="/">Return to portfolio</a></form></div>
+  );
+
+  const previewProject = makeProject(form, 0);
+  const pendingImage = pendingAssets[form.image];
+  const field = (name, label, options = {}) => (
+    <label className={options.wide ? 'cms-field cms-field-wide' : 'cms-field'} htmlFor={`project-${name}`} key={name}>
+      <span>{label}{options.required && <b aria-hidden="true"> *</b>}</span>
+      {options.multiline ? <textarea id={`project-${name}`} rows={options.rows || 3} value={form[name] || ''} onChange={(event) => updateField(name, event.target.value)} required={options.required} /> : <input id={`project-${name}`} type={options.type || 'text'} value={form[name] || ''} onChange={(event) => updateField(name, event.target.value)} required={options.required} placeholder={options.placeholder || ''} />}
+      {options.help && <small>{options.help}</small>}
+    </label>
+  );
+
+  return (
+    <div className="cms-app" data-theme={theme}>
+      <header className="cms-header"><a className="cms-brand" href="/"><span>TB</span><div><strong>Tegabyte</strong><small>CONTENT STUDIO</small></div></a><div className="cms-header-actions"><span className="cms-live-indicator"><i /> GitHub publishing enabled</span><button type="button" className="cms-quiet-button" onClick={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼ Light mode' : '☾ Dark mode'}</button><button type="button" className="cms-quiet-button" onClick={logout}>Sign out</button></div></header>
+      <main className="cms-layout">
+        <aside className="cms-sidebar" aria-label="Project manager"><div className="cms-sidebar-title"><div><span className="cms-kicker">PORTFOLIO CMS</span><h2>Projects <small>{projects.length}</small></h2></div><button type="button" className="cms-add-button" onClick={startNewProject} aria-label="Add a new project">＋</button></div><p className="cms-sidebar-copy">Choose a project to edit, or create a new project card.</p><div className="cms-project-list">{projects.map((project, index) => <div className={`cms-project-choice${project.id === selectedId && !isCreating ? ' is-selected' : ''}`} key={project.id}><button type="button" className="cms-project-select" onClick={() => chooseProject(project)}><span className="cms-project-order">{String(index + 1).padStart(2, '0')}</span><span><strong>{project.name}</strong><small>{project.category || 'Uncategorized'}</small></span></button><div className="cms-order-controls"><button type="button" onClick={() => moveProject(project.id, -1)} disabled={index === 0 || isBusy} aria-label={`Move ${project.name} up`}>↑</button><button type="button" onClick={() => moveProject(project.id, 1)} disabled={index === projects.length - 1 || isBusy} aria-label={`Move ${project.name} down`}>↓</button></div></div>)}</div><button type="button" className="cms-create-project" onClick={startNewProject}>＋ Add project</button><p className="cms-sidebar-foot">Updates are versioned in GitHub. Removing a project publishes that change.</p></aside>
+        <section className="cms-editor" aria-labelledby="cms-editor-title">
+          <div className="cms-editor-heading"><div><span className="cms-kicker">{isCreating ? 'NEW PORTFOLIO ENTRY' : `EDITING · ${String(form.number || '00').padStart(2, '0')}`}</span><h1 id="cms-editor-title">{isCreating ? 'Create a project' : form.name || 'Edit project'}</h1><p>Manage the card, preview, and full case study in one place.</p></div><div className="cms-editor-actions"><button className="cms-quiet-button" type="button" onClick={() => setShowPreview((value) => !value)}>{showPreview ? 'Hide preview' : 'Preview changes'}</button>{!isCreating && <button className="cms-danger-button" type="button" onClick={removeProject} disabled={isBusy}>Remove project</button>}<button className="cms-primary-button" form="project-editor-form" type="submit" disabled={isBusy}>{isBusy ? 'Publishing…' : 'Publish changes'}</button></div></div>
+          {notice && <div className="cms-notice" role="status">{notice}</div>}{error && <div className="cms-error cms-error-banner" role="alert">{error}</div>}
+          {draftStatus && <p className="cms-draft-status" role="status">{draftStatus}</p>}
+          {showPreview && <article className="cms-preview-card"><div className="cms-preview-top"><span>LIVE CARD PREVIEW</span><span>{previewProject.category || 'Category'}</span></div>{pendingImage || form.image ? <img src={pendingImage || form.image} alt={form.imageAlt || `${form.name || 'Project'} cover preview`} /> : <div className={`cms-preview-placeholder theme-${form.theme}`}><span>{form.brand || 'PROJECT'}</span><strong>{form.headline || 'Your project headline'}</strong><p>{form.previewCopy || form.description || 'Add a short project introduction.'}</p></div>}<div className="cms-preview-copy"><h2>{form.name || 'Project title'}</h2><p>{form.description || 'Project card description appears here.'}</p><div>{(form.tagsText || '').split(',').map((tag) => tag.trim()).filter(Boolean).map((tag) => <span key={tag}>{tag}</span>)}</div><details open><summary>Case study preview</summary><MarkdownContent content={form.caseStudyContent} /></details></div></article>}
+          <form id="project-editor-form" className="cms-form" onSubmit={saveProject}>
+            <fieldset><legend>Project identity</legend><div className="cms-form-grid">
+              {field('name', 'Project title', { required: true, placeholder: 'e.g. Recipe Central' })}
+              {field('category', 'Category / label', { required: true, placeholder: 'e.g. Food & lifestyle' })}
+              {field('id', 'Project slug', { help: 'Used for stable project identity and uploaded image paths.' })}
+              <label className="cms-field" htmlFor="project-theme"><span>Card visual theme</span><select id="project-theme" value={form.theme || 'field'} onChange={(event) => updateField('theme', event.target.value)}><option value="recipe-central">Recipe Central</option><option value="assurrex">AssureX</option><option value="field">Editorial</option></select></label>
+              {field('description', 'Card description', { required: true, multiline: true, rows: 4, wide: true, help: 'A concise description shown on the selected-work card.' })}
+              {field('tagsText', 'Tags', { placeholder: 'Brand design, React, AI/ML', help: 'Separate tags with commas.' })}
+            </div></fieldset>
+            <fieldset><legend>Project link and cover</legend><div className="cms-form-grid">
+              {field('liveUrl', 'Live project URL', { type: 'url', placeholder: 'https://example.com' })}
+              {field('address', 'Browser-bar label', { placeholder: 'example.com' })}
+              {field('image', 'Cover image URL or uploaded path', { wide: true, placeholder: 'https://… or upload an image below' })}
+              {field('imageAlt', 'Image description (alt text)', { wide: true, placeholder: 'Describe the important content in the image' })}
+              <label className="cms-field cms-field-wide" htmlFor="project-image-file"><span>Upload a cover image</span><input id="project-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={selectImage} /><small>JPG, PNG, WebP or AVIF; max 3 MB. The file is committed with the project when published.</small></label>
+            </div></fieldset>
+            <fieldset><legend>Landing-page preview content</legend><div className="cms-form-grid">
+              {field('brand', 'Preview wordmark', { placeholder: 'BRAND NAME' })}
+              {field('action', 'Preview button label', { placeholder: 'Explore project' })}
+              {field('eyebrow', 'Preview eyebrow', { wide: true })}
+              {field('headline', 'Preview headline', { wide: true })}
+              {field('previewCopy', 'Preview summary', { multiline: true, rows: 3, wide: true })}
+              {field('previewLink', 'Preview link label')}
+              {field('navText', 'Preview navigation items', { help: 'Separate labels with commas.' })}
+            </div></fieldset>
+            <fieldset><legend>Case study</legend><div className="cms-form-grid">
+              {field('challenge', 'Challenge', { multiline: true, rows: 4, wide: true })}
+              {field('response', 'Approach / response', { multiline: true, rows: 4, wide: true })}
+              <div className="cms-field cms-field-wide cms-markdown-field"><div className="cms-markdown-head"><label htmlFor="project-case-study">Full case study content <small>Markdown supported · raw HTML is disabled</small></label><div role="tablist" aria-label="Case study editor mode"><button type="button" role="tab" aria-selected={markdownMode === 'write'} className={markdownMode === 'write' ? 'is-active' : ''} onClick={() => setMarkdownMode('write')}>Write</button><button type="button" role="tab" aria-selected={markdownMode === 'preview'} className={markdownMode === 'preview' ? 'is-active' : ''} onClick={() => setMarkdownMode('preview')}>Preview</button></div></div>{markdownMode === 'write' ? <><div className="cms-markdown-toolbar"><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}## New section\n`)}>H2 Section</button><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}**Bold text**`)}>Bold</button><button type="button" onClick={() => updateField('caseStudyContent', `${form.caseStudyContent || ''}${form.caseStudyContent ? '\n\n' : ''}- List item`)}>Bullet list</button></div><textarea id="project-case-study" rows="16" value={form.caseStudyContent || ''} onChange={(event) => updateField('caseStudyContent', event.target.value)} placeholder={'## Overview\nDescribe the project…\n\n## Approach\n- Add a key decision\n- Add an outcome'} /><small>Supports headings, paragraphs, bullet lists, block quotes, **bold**, *italic*, `inline code`, and HTTPS links.</small></> : <div className="cms-markdown-preview"><MarkdownContent content={form.caseStudyContent} /></div>}</div>
+            </div></fieldset>
+          </form>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  if (path === '/admin') return <AdminDashboard />;
+  if (path === '/' || path === '/index.html') return <PortfolioApp />;
+  return <NotFoundPage />;
+}
+
+function NotFoundPage() {
+  const [theme, setTheme] = useState(getSavedTheme);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+  return (
+    <main className="not-found-shell" data-theme={theme}>
+      <div className="not-found-topline"><a className="not-found-brand" href="/" aria-label="Tegabyte home"><span>TB</span> Tegabyte</a><button type="button" className="not-found-theme" onClick={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>{theme === 'dark' ? '☼' : '☾'}</button></div>
+      <section className="not-found-content" aria-labelledby="not-found-title">
+        <div className="not-found-graphic" aria-hidden="true"><div className="not-found-orbit orbit-one"/><div className="not-found-orbit orbit-two"/><div className="not-found-crosshair">404</div><span className="not-found-pixel pixel-one"/><span className="not-found-pixel pixel-two"/><span className="not-found-pixel pixel-three"/></div>
+        <span className="not-found-kicker">ROUTE NOT FOUND · 404</span>
+        <h1 id="not-found-title">Looks like this path<br/><em>is still in the lab.</em></h1>
+        <p>The page may have moved, or the address might be off. Let’s get you back to the workbench.</p>
+        <a className="not-found-home-link" href="/">Return to portfolio <span aria-hidden="true">↗</span></a>
+        <div className="not-found-footer"><span>TEGABYTE · DIGITAL PRODUCT ENGINEERING</span><a href="mailto:oyibochaoghenetega5@gmail.com">Need a hand? Get in touch</a></div>
+      </section>
+    </main>
   );
 }
 
