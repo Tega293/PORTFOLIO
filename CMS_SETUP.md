@@ -13,6 +13,7 @@ In the Vercel project settings, add these **server-side environment variables** 
 | `CMS_GITHUB_TOKEN` | A GitHub fine-grained personal access token for this repository, with **Contents: Read and write**. Do not expose it to browser code. |
 | `CMS_GITHUB_REPOSITORY` | `Tega293/PORTFOLIO` (the current default). |
 | `CMS_GITHUB_BRANCH` | `master` (the current default production branch). |
+| `GOOGLE_TRANSLATE_API_KEY` | Optional. Server-side Google Cloud Translation key for the public language selector. |
 
 Generate independent secrets locally with Node:
 
@@ -23,6 +24,12 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 Run it once for `CMS_ADMIN_PASSWORD` and again for `CMS_SESSION_SECRET`, then set the values directly in Vercel. Never commit them, put them in `REACT_APP_*` variables, or paste them into the CMS editor. The GitHub token should be limited to this one repository; Contents access is the only permission the publisher needs.
 
 After setting the variables, redeploy the Vercel project and visit `/admin`. The sign-in cookie is HTTP-only, secure in production, SameSite Strict, and expires after eight hours. The admin API rejects cross-origin writes and checks the catalog revision before publishing to avoid overwriting a newer edit.
+
+## Optional public language selector
+
+The portfolio can load Google's supported language list and translate visible page text after a visitor selects a language. To enable it, create a Google Cloud project, enable Cloud Translation, configure billing, create an API key restricted to the Cloud Translation API, and add the key as the Vercel environment variable `GOOGLE_TRANSLATE_API_KEY`. Keep the key server-side; the API routes send it in a request header and never expose it to React. Set Cloud Translation quotas and budget alerts before enabling this public feature because usage is billed by text volume. Then redeploy. Without this variable the portfolio stays in English and the language selector is disabled.
+
+When a visitor selects another language, visible portfolio copy is sent to Google Cloud Translation. The result is machine translated and may not preserve every nuance. The website's privacy and cookies notices disclose this processing. Google's widget was not used because Google announced it is no longer supported starting October 1, 2026.
 
 For local end-to-end CMS work, run the project with `npx vercel dev` after adding the same variables to a local `.env.local` file. Keep `.env.local` untracked and never commit it. `npm start` alone serves the React interface but does not run the Vercel API routes.
 

@@ -52,8 +52,9 @@ const moreNavItems = [
 ];
 
 const portfolioStats = [
-  { key: 'projects', label: 'Live prototypes', target: 2, suffix: '' },
-  { key: 'tools', label: 'Interactive AI demos', target: 5, suffix: '' },
+  { key: 'projects', label: 'Live prototypes', target: 50, suffix: '' },
+  { key: 'tools', label: 'Interactive demos', target: 50, suffix: '' },
+  { key: 'goal', label: 'Long-term project goal', target: 1000, suffix: '+' },
 ];
 
 const portfolioSections = [
@@ -125,6 +126,102 @@ function getSavedTheme() {
   } catch {
     return 'dark';
   }
+}
+
+const originalTextValues = new WeakMap();
+const originalAttributes = new WeakMap();
+const translationCache = new Map();
+
+function splitForTranslation(value, maxLength = 2500) {
+  const chunks = [];
+  let remaining = value;
+  while (remaining.length > maxLength) {
+    let boundary = remaining.lastIndexOf(' ', maxLength);
+    if (boundary < maxLength * .55) boundary = maxLength;
+    chunks.push(remaining.slice(0, boundary).trim());
+    remaining = remaining.slice(boundary).trim();
+  }
+  if (remaining) chunks.push(remaining);
+  return chunks;
+}
+
+function collectTranslatableEntries(root) {
+  const entries = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent || !node.nodeValue.trim() || parent.closest('script,style,noscript,code,kbd,[aria-hidden="true"],[data-translation-ignore]')) return NodeFilter.FILTER_REJECT;
+      return /[\p{L}]/u.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+  let node;
+  while ((node = walker.nextNode())) {
+    const value = originalTextValues.get(node) ?? node.nodeValue;
+    originalTextValues.set(node, value);
+    const start = value.match(/^\s*/)?.[0] || '';
+    const end = value.match(/\s*$/)?.[0] || '';
+    const text = value.slice(start.length, value.length - end.length || value.length);
+    if (text) {
+      const originalNode = node;
+      const chunks = splitForTranslation(text);
+      const translations = new Array(chunks.length);
+      chunks.forEach((chunk, index) => entries.push({ text: chunk, apply: (translated) => {
+        translations[index] = translated;
+        if (originalNode.isConnected && translations.every((part) => part !== undefined)) originalNode.nodeValue = `${start}${translations.join(' ')}${end}`;
+      } }));
+    }
+  }
+  const attributes = ['aria-label', 'title', 'placeholder', 'alt'];
+  root.querySelectorAll(attributes.map((attribute) => `[${attribute}]`).join(',')).forEach((element) => {
+    if (element.closest('[data-translation-ignore]')) return;
+    const original = originalAttributes.get(element) || {};
+    attributes.forEach((attribute) => {
+      const value = original[attribute] ?? element.getAttribute(attribute);
+      if (value && /[\p{L}]/u.test(value)) {
+        original[attribute] = value;
+        entries.push({ text: value, apply: (translated) => { if (element.isConnected) element.setAttribute(attribute, translated); } });
+      }
+    });
+    originalAttributes.set(element, original);
+  });
+  return entries;
+}
+
+function restorePortfolioEnglish(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    const original = originalTextValues.get(node);
+    if (original !== undefined) node.nodeValue = original;
+  }
+  root.querySelectorAll('[aria-label],[title],[placeholder],[alt]').forEach((element) => {
+    const original = originalAttributes.get(element);
+    if (original) Object.entries(original).forEach(([attribute, value]) => element.setAttribute(attribute, value));
+  });
+}
+
+async function applyPortfolioLanguage(root, target, isCurrent) {
+  restorePortfolioEnglish(root);
+  if (target === 'en') return;
+  const entries = collectTranslatableEntries(root);
+  const unresolved = entries.filter((entry) => !translationCache.has(`${target}\u0000${entry.text}`));
+  const batches = [];
+  let batch = [];
+  let characters = 0;
+  unresolved.forEach((entry) => {
+    if (batch.length >= 100 || characters + entry.text.length > 20_000) { batches.push(batch); batch = []; characters = 0; }
+    batch.push(entry); characters += entry.text.length;
+  });
+  if (batch.length) batches.push(batch);
+  for (const currentBatch of batches) {
+    if (!isCurrent()) return;
+    const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target, texts: currentBatch.map((entry) => entry.text) }) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Translation is unavailable.');
+    result.translations.forEach((text, index) => translationCache.set(`${target}\u0000${currentBatch[index].text}`, text));
+  }
+  if (!isCurrent()) return;
+  entries.forEach((entry) => entry.apply(translationCache.get(`${target}\u0000${entry.text}`) || entry.text));
 }
 
 function AlgorithmMark() {
@@ -632,7 +729,7 @@ function PortfolioApp() {
   const [activeSection, setActiveSection] = useState('work');
   const [theme, setTheme] = useState(getSavedTheme);
   const [themeTransition, setThemeTransition] = useState(false);
-  const [statCounts, setStatCounts] = useState({ projects: 0, tools: 0 });
+  const [statCounts, setStatCounts] = useState({ projects: 0, tools: 0, goal: 0 });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [projects, setProjects] = useState(defaultProjects);
   const [capabilities, setCapabilities] = useState(defaultSkills);
@@ -651,6 +748,10 @@ function PortfolioApp() {
   const [compareIds, setCompareIds] = useState(() => [defaultProjects[0]?.id || '', defaultProjects[1]?.id || '']);
   const [estimatedMinutes, setEstimatedMinutes] = useState(1);
   const [faqQuery, setFaqQuery] = useState('');
+  const [language, setLanguage] = useState(() => { try { return window.localStorage.getItem('portfolio-language') || 'en'; } catch { return 'en'; } });
+  const [languages, setLanguages] = useState([{ code: 'en', name: 'English' }]);
+  const [translationConfigured, setTranslationConfigured] = useState(false);
+  const [translationStatus, setTranslationStatus] = useState('');
 
   function notify(message) {
     setToast(message);
@@ -724,6 +825,49 @@ function PortfolioApp() {
       .catch(() => {});
     return () => { isCurrent = false; };
   }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+    fetch('/api/languages')
+      .then(async (response) => ({ response, data: await response.json().catch(() => ({})) }))
+      .then(({ response, data }) => {
+        if (!isCurrent) return;
+        if (response.ok && data.configured && Array.isArray(data.languages)) {
+          setLanguages(data.languages); setTranslationConfigured(true);
+        } else {
+          setLanguages([{ code: 'en', name: 'English' }]); setTranslationConfigured(false);
+          setLanguage('en'); setTranslationStatus('Add the Google translation key in Vercel to enable other languages.');
+        }
+      })
+      .catch(() => { if (isCurrent) { setLanguage('en'); setTranslationStatus('Language options are temporarily unavailable.'); } });
+    return () => { isCurrent = false; };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    const rtlLanguages = new Set(['ar', 'fa', 'he', 'iw', 'ps', 'sd', 'ug', 'ur', 'yi']);
+    document.documentElement.dir = rtlLanguages.has(language.split('-')[0]) ? 'rtl' : 'ltr';
+    try { window.localStorage.setItem('portfolio-language', language); } catch { /* Language remains selected for this session. */ }
+  }, [language]);
+
+  useEffect(() => {
+    const root = portfolioRef.current?.querySelector('.portfolio-shell');
+    if (!root) return undefined;
+    let isCurrent = true;
+    if (language === 'en') {
+      restorePortfolioEnglish(root);
+      return () => { isCurrent = false; };
+    }
+    if (!translationConfigured) return () => { isCurrent = false; };
+    setTranslationStatus(`Translating to ${languages.find((item) => item.code === language)?.name || language}…`);
+    applyPortfolioLanguage(root, language, () => isCurrent)
+      .then(() => { if (isCurrent) setTranslationStatus('Machine translated. Some phrasing may vary.'); })
+      .catch((error) => {
+        if (!isCurrent) return;
+        restorePortfolioEnglish(root); setLanguage('en'); setTranslationStatus(error.message || 'Translation could not be completed.');
+      });
+    return () => { isCurrent = false; };
+  }, [language, languages, translationConfigured, projects, capabilities, theme, searchQuery, categoryFilter, sortBy, faqQuery, showCompare, showShortcuts, savedIds, recentIds, recentSectionIds]);
 
   useEffect(() => {
     const words = document.querySelector('main#top')?.innerText.match(/\b[\w’'-]+\b/g)?.length || 0;
@@ -891,7 +1035,7 @@ function PortfolioApp() {
               <time>{new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(clockNow)}</time>
             </div>
           </div>
-          <div className="nav-availability"><span className="nav-ai-mark">AI</span><span>Available for work</span><i aria-hidden="true" /></div>
+          <div className="nav-availability"><span>Available for work</span><i aria-hidden="true" /></div>
           <button
             className={`menu-toggle${menuOpen ? ' is-open' : ''}`}
             type="button"
@@ -939,6 +1083,9 @@ function PortfolioApp() {
 
         <div className="reader-tools" aria-label="Reading tools">
           <span className="reading-time"><i aria-hidden="true">◷</i> {estimatedMinutes} min read</span>
+          <label className="language-picker" data-translation-ignore><span>Read in</span><select aria-label="Select language to read this portfolio" value={language} disabled={!translationConfigured} onChange={(event) => { setTranslationStatus(''); setLanguage(event.target.value); }}><option value="en">English</option>{languages.filter((item) => item.code !== 'en').map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label>
+          {!translationConfigured && <span className="language-setup-note" title="Automatic translations are disabled until the server-side Google Cloud Translation key is configured.">Language service setup needed</span>}
+          {translationStatus && translationConfigured && <span className="language-setup-note" role="status">{translationStatus}</span>}
           <label className="jump-control">Jump to <select aria-label="Jump to a section" defaultValue="top" onChange={(event) => document.getElementById(event.target.value)?.scrollIntoView({ behavior: 'smooth' })}>{portfolioSections.map(([id, label]) => <option value={id} key={id}>{label}</option>)}</select></label>
           <div className="text-size-controls" role="group" aria-label="Text size"><span>Text</span><button type="button" onClick={() => setFontScale((value) => Math.max(.9, +(value - .1).toFixed(1)))} aria-label="Decrease text size">A−</button><button type="button" onClick={() => setFontScale((value) => Math.min(1.2, +(value + .1).toFixed(1)))} aria-label="Increase text size">A+</button></div>
           <button className="reader-tool-button" type="button" onClick={sharePage}>Share page ↗</button>
@@ -952,7 +1099,7 @@ function PortfolioApp() {
             <div className="hero-copy">
               <div className="eyebrow"><span className="eyebrow-dot" />AI/ML Engineer · Web Developer · Product Designer</div>
               <h1 id="hero-title">Useful ideas, made <span>beautiful.</span></h1>
-              <p className="hero-intro">I’m Oghenetega Oyibocha Emmanuel, an AI/ML engineer, web developer and product designer. I build thoughtful digital products and intelligent tools, and I’m open to roles, freelance work and collaborations.</p>
+              <p className="hero-intro">I’m Adesina Oghenetega Emmanuel, an AI/ML engineer, web developer and product designer. I build thoughtful digital products and intelligent tools, and I’m open to roles, freelance work and collaborations.</p>
               <div className="hero-actions">
                 <a className="button button-primary" href="#work">Explore selected work <span aria-hidden="true">↘</span></a>
                 <a className="button button-quiet" href="#about">A little about me <span aria-hidden="true">→</span></a>
@@ -995,7 +1142,7 @@ function PortfolioApp() {
           <section className="portfolio-stats section" id="portfolio-stats" aria-labelledby="stats-title" data-reveal>
             <div className="stats-heading">
               <div><span className="section-kicker">A snapshot of the journey</span><h2 id="stats-title">Building with purpose.</h2></div>
-              <p>A factual snapshot of the work and browser-based experiments currently shown here.</p>
+              <p>A snapshot of current portfolio work, browser-based experiments, and a long-term project goal.</p>
             </div>
             <div className="stats-grid">
               {portfolioStats.map(({ key, label, suffix }) => (
@@ -1041,7 +1188,7 @@ function PortfolioApp() {
           </section>
 
           <section className="about section" id="about" aria-labelledby="about-title" data-reveal>
-            <div><span className="section-kicker">A little about me</span><h2 id="about-title">Oghenetega Oyibocha Emmanuel</h2></div>
+            <div><span className="section-kicker">A little about me</span><h2 id="about-title">Adesina Oghenetega Emmanuel</h2></div>
             <div>
               <p>I’m an AI/ML engineer, web developer and product designer working at the intersection of intelligent technology and human-centered experiences. I enjoy turning complex ideas into useful products, from the underlying logic and code to the interface people see and use. I’m also a certified penetration tester, bringing a security-aware perspective to the way I build.</p>
               <p>As a freelancer, I partner with people and teams to take ideas from early thinking through design and development. I’m working toward building a startup of my own, and I’m open to full-time opportunities, freelance projects and collaborations where I can contribute, keep learning and make meaningful work.</p>
@@ -1113,7 +1260,7 @@ function PortfolioApp() {
           </section>
 
           <footer className="site-footer">
-            <span><strong>Oghenetega Oyibocha Emmanuel · Tegabyte</strong><a href="mailto:oyibochaoghenetega5@gmail.com">oyibochaoghenetega5@gmail.com</a><a href="https://wa.me/2347047175423" target="_blank" rel="noopener noreferrer">WhatsApp: +234 704 717 5423</a></span>
+            <span><strong>Adesina Oghenetega Emmanuel · Tegabyte</strong><a href="mailto:oyibochaoghenetega5@gmail.com">oyibochaoghenetega5@gmail.com</a><a href="https://wa.me/2347047175423" target="_blank" rel="noopener noreferrer">WhatsApp: +234 704 717 5423</a></span>
             <span>© {new Date().getFullYear()} Tegabyte <i>·</i> Built with intention</span>
             <nav className="footer-legal" aria-label="Policies and accessibility"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/cookies.html">Cookies</a><a href="/refund-policy.html">Refunds</a><a href="/accessibility.html">Accessibility</a></nav>
           </footer>
